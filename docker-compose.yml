@@ -1,0 +1,32 @@
+version: '3'
+services:
+  mongo1:
+    container_name: mongo1
+    image: mongo
+    volumes:
+      - '~/mongo-oplog:/data/db'
+    ports:
+      - '2717:27017'
+    networks:
+      - mongoCluster
+    command: 'mongod --replSet myReplicaSet --bind_ip localhost,mongo1'
+
+  mongo2:
+    container_name: mongo2
+    image: mongo
+    ports:
+      - '2718:27017'
+    networks:
+      - mongoCluster
+    command: 'mongod --replSet myReplicaSet --bind_ip localhost,mongo2'
+
+  mongo3:
+    container_name: mongo3
+    image: mongo
+    ports:
+      - '2719:27017'
+    networks:
+      - mongoCluster
+    command: 'mongod --replSet myReplicaSet --bind_ip localhost,mongo3'
+networks:
+  mongoCluster: {}
