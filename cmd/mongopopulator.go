@@ -15,19 +15,16 @@ var rootCmd = &cobra.Command{
 	Long:  `A simple CLI application to demonstrate the usage of Cobra.`,
 	Args:  cobra.ExactArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
-		mongoConnection := config.GetMongoConnection(args)
-		errMakeInsertJson := populator.MakeInsertJson(mongoConnection, args)
-		if errMakeInsertJson != nil {
-			log.Fatal("err: ", errMakeInsertJson)
+		//get Client for mongo
+		client := config.GetClient()
+
+		mongoConnection := config.GetMongoConnection(args, client)
+		err := populator.MakePopulateJson(mongoConnection, args)
+		if err != nil {
+			log.Fatal("err: ", err)
 		}
-		errMakeDeleteJson := populator.MakeDeleteJson(mongoConnection, args)
-		if errMakeDeleteJson != nil {
-			log.Fatal("err: ", errMakeDeleteJson)
-		}
-		errMakeInsertAllJson := populator.MakeInsertAllJson(mongoConnection, args)
-		if errMakeInsertAllJson != nil {
-			log.Fatal("err: ", errMakeInsertAllJson)
-		}
+		//Disconnect Client
+		config.DisconnectClient(client)
 	},
 }
 

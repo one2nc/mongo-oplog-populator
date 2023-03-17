@@ -1,11 +1,12 @@
 package populator
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
+	"math"
 	"strconv"
 
-	"github.com/brianvoe/gofakeit/v6"
+	"github.com/brianvoe/gofakeit"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -17,74 +18,63 @@ const (
 	delete = "d"
 )
 
-func MakeInsertJson(mongoConnection *mongo.Collection, args []string) error {
+func MakePopulateJson(mongoConnection *mongo.Collection, args []string) error {
 	database = args[1]
 	table = args[2]
 	size, _ := strconv.Atoi(args[3])
+	d := (5 * size) / 100
+	d = int(math.Max(float64(d), 1))
+
+	u := (10 * size) / 100
+	u = int(math.Max(float64(u), 1))
+
+	a := 0
+	b := 0
+
 	for i := 0; i < size; i++ {
-		stud := StudentInfo{Id: gofakeit.UUID(), Name: gofakeit.Name(), Roll_no: gofakeit.Number(0, 50), Is_Graduated: gofakeit.Bool(), Date_Of_Birth: gofakeit.Date().Format("02-01-2006")}
-		insertData := Oplog{Type: insert, Namespace: database + "." + table, StudentInfo: stud}
-		jsonData, err := convertToJson(insertData)
+		id := gofakeit.UUID()
+		name := gofakeit.Name()
+		stud := StudentInfo{Id: id, Name: name, Roll_no: gofakeit.Number(0, 50), Is_Graduated: gofakeit.Bool(), Date_Of_Birth: gofakeit.Date().Format("02-01-2006")}
+		_, err := mongoConnection.InsertOne(context.Background(), stud)
 		if err != nil {
-			fmt.Println("Error in MakeInserJson. The error is:", err)
+			panic(err)
 		}
-		fmt.Println("json data is:", jsonData)
-	}
-	// _, err = mongoConnection.InsertOne(context.Background(), jsonData)
-	// if err != nil {
-	// 	fmt.Println("Error inserting oplog data:", err)
-	// 	return err
-	// }
 
-	// fmt.Println("Oplog data inserted successfully!")
-	return nil
-}
+		if b <= u {
+			filter := bson.M{"Id": id, "Name": name}
+			updateSet := bson.M{
+				"$set": bson.M{
+					"Name":         gofakeit.Name(),
+					"Is_Graduated": gofakeit.Bool(),
+				},
+			}
+			updateUnset := bson.M{
+				"$unset": bson.M{
+					"Date_Of_Birth": "",
+				},
+			}
 
-func MakeDeleteJson(mongoConnection *mongo.Collection, args []string) error {
-	database = args[1]
-	table = args[2]
-	size, _ := strconv.Atoi(args[3])
-	for i := 0; i < size; i++ {
-		stud := StudentInfo{Id: gofakeit.UUID()}
-		insertData := Oplog{Type: delete, Namespace: database + "." + table, StudentInfo: stud}
-		jsonData, err := convertToJson(insertData)
-		if err != nil {
-			fmt.Println("Error in MakeDelete. The error is:", err)
+			randomBool := gofakeit.Bool()
+			var update interface{}
+			if randomBool {
+				update = updateSet
+			} else {
+				update = updateUnset
+			}
+			_, errUpdate := mongoConnection.UpdateOne(context.Background(), filter, update)
+			if errUpdate != nil {
+				panic(errUpdate)
+			}
+			b++
 		}
-		fmt.Println("json data is:", jsonData)
-	}
-	return nil
-}
 
-func MakeUpdateJson(mongoConnection *mongo.Collection, args []string) {
-	status := make([]string, 0)
-	status = append(status, "$set")
-	status = append(status, "$unset")
-
-}
-
-func MakeInsertAllJson(mongoConnection *mongo.Collection, args []string) error {
-	database = args[1]
-	table = args[2]
-	size, _ := strconv.Atoi(args[3])
-	for i := 0; i < size; i++ {
-		stud := StudentInfo{Id: gofakeit.UUID(), Name: gofakeit.Name(), Roll_no: gofakeit.Number(0, 50), Is_Graduated: gofakeit.Bool(), Date_Of_Birth: gofakeit.Date().Format("02-01-2006"), Address: []Address{{Line1: gofakeit.Address().Address, Line2: gofakeit.Address().Address, Zip: gofakeit.Zip()}}, Phone: []Phone{{Personal: gofakeit.Phone(), Work: gofakeit.Phone()}}, Email: gofakeit.Email()}
-		insertData := Oplog{Type: insert, Namespace: database + "." + table, StudentInfo: stud}
-		jsonData, err := convertToJson(insertData)
-		if err != nil {
-			fmt.Println("Error in MakeInsertAllJson. The error is:", err)
-			return err
+		if a <= d {
+			_, errDelete := mongoConnection.DeleteOne(context.Background(), stud)
+			if errDelete != nil {
+				panic(errDelete)
+			}
+			a++
 		}
-		fmt.Println("json data is:", jsonData)
 	}
 	return nil
-}
-
-func convertToJson(insertData Oplog) (string, error) {
-	jsonData, err := json.Marshal(insertData)
-	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
-		return "", err
-	}
-	return string(jsonData), nil
 }
