@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 
 		populator.MakePopulateJson(client, operations)
 
-		// //Disconnect Client
+		//Disconnect Client
 		config.DisconnectClient(client)
 	},
 }
