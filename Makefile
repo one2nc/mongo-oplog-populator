@@ -11,4 +11,4 @@ build:
 	go build -o mongopop main.go
 
 populate: build
-	./mongopop oplogpop $(ARGS)
+	./mongopop oplogpop 

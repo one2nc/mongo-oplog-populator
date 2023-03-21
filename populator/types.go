@@ -10,6 +10,39 @@ type StudentInfo struct {
 	Phone         []Phone   `json:"Phone,omitempty"`
 	Email         string    `json:"Email,omitempty"`
 }
+
+type Employee struct {
+	Id       string
+	Name     string
+	Age      int
+	Salary   float64
+	Position string
+}
+
+type EmployeeS struct {
+	Id        string
+	Name      string
+	Age       int
+	Salary    float64
+	Position  string
+	WorkHours int
+}
+
+type Student struct {
+	Id      string
+	Name    string
+	Age     int
+	Subject string
+}
+
+type StudentS struct {
+	Id           string
+	Name         string
+	Age          int
+	Subject      string
+	Is_Graduated bool
+}
+
 type Oplog struct {
 	Type        string      `json:"op"`
 	Namespace   string      `json:"ns"`

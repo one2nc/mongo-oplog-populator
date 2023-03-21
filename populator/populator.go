@@ -2,11 +2,10 @@ package populator
 
 import (
 	"context"
-	"math"
-	"strconv"
+	"log"
+	"math/rand"
 
 	"github.com/brianvoe/gofakeit"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -18,63 +17,93 @@ const (
 	delete = "d"
 )
 
-func MakePopulateJson(mongoConnection *mongo.Collection, args []string) error {
-	database = args[1]
-	table = args[2]
-	size, _ := strconv.Atoi(args[3])
-	d := (5 * size) / 100
-	d = int(math.Max(float64(d), 1))
+func MakePopulateJson(client *mongo.Client, operations int) {
+	subjects := []string{"Maths", "Science", "Social Studies", "English"}
+	positions := []string{"Manager", "Engineer", "Salesman", "Developer"}
 
-	u := (10 * size) / 100
-	u = int(math.Max(float64(u), 1))
+	studentsCount := operations / 2
+	employeesCount := operations - studentsCount
+	studentsCollection := client.Database("student").Collection("students")
+	employeesCollection := client.Database("Employee").Collection("employees")
 
-	a := 0
-	b := 0
-
-	for i := 0; i < size; i++ {
+	// ds := (5 * studentsCount) / 100
+	// ds = int(math.Max(float64(d), 1))
+	// a := 0
+	// b := 0
+	for i := 0; i < studentsCount; i++ {
+		ctx := context.Background()
 		id := gofakeit.UUID()
-		name := gofakeit.Name()
-		stud := StudentInfo{Id: id, Name: name, Roll_no: gofakeit.Number(0, 50), Is_Graduated: gofakeit.Bool(), Date_Of_Birth: gofakeit.Date().Format("02-01-2006")}
-		_, err := mongoConnection.InsertOne(context.Background(), stud)
-		if err != nil {
-			panic(err)
+		data := &Student{
+			Id:      id,
+			Name:    gofakeit.FirstName() + " " + gofakeit.LastName(),
+			Age:     rand.Intn(10) + 18,
+			Subject: subjects[rand.Intn(len(subjects))],
+		}
+		_, errS := studentsCollection.InsertOne(ctx, data)
+		if errS != nil {
+			log.Fatal(errS)
 		}
 
-		if b <= u {
-			filter := bson.M{"Id": id, "Name": name}
-			updateSet := bson.M{
-				"$set": bson.M{
-					"Name":         gofakeit.Name(),
-					"Is_Graduated": gofakeit.Bool(),
-				},
-			}
-			updateUnset := bson.M{
-				"$unset": bson.M{
-					"Date_Of_Birth": "",
-				},
-			}
+		//Add uuid to array
+		//Add delete here
+		// if a <= ds {
+		// 	_, errD := studentsCollection.DeleteOne(ctx, id)
+		// 	if errD != nil {
+		// 		log.Fatal(errD)
+		// 	}
+		// 	a++
+		// }
+	}
 
-			randomBool := gofakeit.Bool()
-			var update interface{}
-			if randomBool {
-				update = updateSet
-			} else {
-				update = updateUnset
-			}
-			_, errUpdate := mongoConnection.UpdateOne(context.Background(), filter, update)
-			if errUpdate != nil {
-				panic(errUpdate)
-			}
-			b++
+	for i := 0; i < employeesCount; i++ {
+		ctx := context.Background()
+		id := gofakeit.UUID()
+		data := &Employee{
+			Id:       id,
+			Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
+			Age:      rand.Intn(30) + 20,
+			Salary:   rand.Float64() * 10000,
+			Position: positions[rand.Intn(len(positions))],
+		}
+		_, errE := employeesCollection.InsertOne(ctx, data)
+		if errE != nil {
+			log.Fatal(errE)
 		}
 
-		if a <= d {
-			_, errDelete := mongoConnection.DeleteOne(context.Background(), stud)
-			if errDelete != nil {
-				panic(errDelete)
-			}
-			a++
+		//add delete here
+		_, errDe := employeesCollection.DeleteOne(ctx, id)
+		if errDe != nil {
+			log.Fatal(errDe)
 		}
 	}
-	return nil
+
+	//insert data for alter table
+	for i := 0; i < 3; i++ {
+		ctx := context.Background()
+		dataS := &StudentS{
+			Id:           gofakeit.UUID(),
+			Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
+			Age:          rand.Intn(10) + 18,
+			Subject:      subjects[rand.Intn(len(subjects))],
+			Is_Graduated: gofakeit.Bool(),
+		}
+		_, errS := studentsCollection.InsertOne(ctx, dataS)
+		if errS != nil {
+			log.Fatal(errS)
+		}
+
+		dataE := &EmployeeS{
+			Id:        gofakeit.UUID(),
+			Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
+			Age:       rand.Intn(30) + 20,
+			Salary:    rand.Float64() * 10000,
+			Position:  positions[rand.Intn(len(positions))],
+			WorkHours: rand.Intn(8) + 4,
+		}
+		_, errE := employeesCollection.InsertOne(ctx, dataE)
+		if errE != nil {
+			log.Fatal(errE)
+		}
+	}
+
 }
