@@ -38,8 +38,14 @@ func MakePopulateJson(client *mongo.Client, operations int) {
 	for i := 0; i < op; i++ {
 		go func() {
 			var collection *mongo.Collection
+			var deletecollection *mongo.Collection
+			var updatecollection *mongo.Collection
+			var update interface{}
+			var updateSet interface{}
+			var updateUnset interface{}
+
 			var data interface{}
-			var id string
+			var sid string
 			randomBool := gofakeit.Bool()
 
 			aMutex.Lock()
@@ -47,73 +53,61 @@ func MakePopulateJson(client *mongo.Client, operations int) {
 
 			if randomBool {
 				// insert a student
-				id = gofakeit.UUID()
-				name := gofakeit.FirstName() + " " + gofakeit.LastName()
+				sid = gofakeit.UUID()
+				sname := gofakeit.FirstName() + " " + gofakeit.LastName()
 				data = &Student{
-					Id:      id,
-					Name:    name,
+					Id:      sid,
+					Name:    sname,
 					Age:     rand.Intn(10) + 18,
 					Subject: subjects[rand.Intn(len(subjects))],
 				}
 
 				collection = studentsCollection
-				deleteBool := gofakeit.Bool()
+				deleteBoolS := gofakeit.Bool()
 				studentUpdate := gofakeit.Bool()
 				if studentUpdate {
 					if b < u {
-						filter := bson.M{"Id": id}
-						// r := studentsCollection.FindOne(ctx, filter)
-						updateSet := bson.M{
+						updatecollection = studentsCollection
+						// updateSet = bson.D{{"$set", bson.D{{"Name", gofakeit.Name()}}}}
+						// updateUnset = bson.D{{"$unset", bson.D{{"Name", gofakeit.Name()}}}}
+
+						updateSet = bson.M{
 							"$set": bson.M{
-								"Name": gofakeit.Name(),
 								"Age":  rand.Intn(10) + 18,
 							},
 						}
 
-						updateUnset := bson.M{
+						updateUnset = bson.M{
 							"$unset": bson.M{
 								"Subject": "",
 							},
 						}
-
-						updateB := gofakeit.Bool()
-						var update interface{}
-						if updateB {
+						updateS := gofakeit.Bool()
+						if updateS {
 							update = updateSet
 						} else {
 							update = updateUnset
 						}
-						_, errUpdate := studentsCollection.UpdateOne(context.Background(), filter, update)
-						if errUpdate != nil {
-							panic(errUpdate)
-						}
 
 						b++
 					}
-				}
 
-				if deleteBool {
+				}
+				if deleteBoolS {
 					if a < d {
-						filter := bson.M{"Id": id, "Name": name}
-						r := studentsCollection.FindOne(ctx, filter)
-						if r != nil {
-							_, errDelete := studentsCollection.DeleteOne(ctx, data)
-							if errDelete != nil {
-								panic(errDelete)
-							}
-							a++
-						}
+						deletecollection = studentsCollection
+						a++
+
 					}
 				}
-
 			} else {
 				// insert an employee
-				id := gofakeit.UUID()
-				name := gofakeit.FirstName() + " " + gofakeit.LastName()
+				eid := gofakeit.UUID()
+				ename := gofakeit.FirstName() + " " + gofakeit.LastName()
 				phone := []Phone{{gofakeit.Phone(), gofakeit.Phone()}}
 				data = &Employee{
-					Id:       id,
-					Name:     name,
+					Id:       eid,
+					Name:     ename,
 					Age:      rand.Intn(30) + 20,
 					Salary:   rand.Float64() * 10000,
 					Phone:    phone,
@@ -121,47 +115,39 @@ func MakePopulateJson(client *mongo.Client, operations int) {
 				}
 
 				collection = employeesCollection
-				deleteBool := gofakeit.Bool()
+				deleteBoolE := gofakeit.Bool()
 				employeeUpdate := gofakeit.Bool()
 
 				if employeeUpdate {
 					if b < u {
-						filter := bson.M{"Id": id, "Name": name}
-						updateSet := bson.M{
+						updatecollection = employeesCollection
+						// updateSet = bson.D{{"$set", bson.D{{"Name", gofakeit.Name()}}}}
+						// updateUnset = bson.D{{"$unset", bson.D{{"Name", ""}}}}
+
+						updateSet = bson.M{
 							"$set": bson.M{
-								"Name": gofakeit.Name(),
+								"Age": rand.Intn(10) + 18,
 							},
 						}
-
-						updateUnset := bson.M{
+						updateUnset = bson.M{
 							"$unset": bson.M{
-								"Position": "",
+								"Position": " ",
 							},
 						}
-
-						updateB := gofakeit.Bool()
-						var update interface{}
-						if updateB {
+						updateE := gofakeit.Bool()
+						if updateE {
 							update = updateSet
 						} else {
 							update = updateUnset
-						}
-						_, errUpdate := employeesCollection.UpdateOne(context.Background(), filter, update)
-						if errUpdate != nil {
-							panic(errUpdate)
 						}
 
 						b++
 					}
 				}
 
-				if deleteBool {
+				if deleteBoolE {
 					if a < d {
-						// employeesCollection.FindOne(ctx, data)
-						_, errDelete := studentsCollection.DeleteOne(ctx, data)
-						if errDelete != nil {
-							panic(errDelete)
-						}
+						deletecollection = employeesCollection
 						a++
 					}
 				}
@@ -173,7 +159,20 @@ func MakePopulateJson(client *mongo.Client, operations int) {
 				log.Fatal(err)
 			}
 
-			ch <- id // signal that an insertion has been completed
+			if updatecollection != nil {
+				_, errUpdate := updatecollection.UpdateOne(ctx, data, update)
+				if errUpdate != nil {
+					log.Fatal(errUpdate)
+				}
+			}
+
+			if deletecollection != nil {
+				_, errDelete := deletecollection.DeleteOne(ctx, data)
+				if errDelete != nil {
+					log.Fatal(errDelete)
+				}
+			}
+			ch <- sid // signal that an insertion has been completed
 		}()
 	}
 
@@ -186,6 +185,8 @@ func MakePopulateJson(client *mongo.Client, operations int) {
 	//insert data for alter table
 	for i := 0; i < 3; i++ {
 		ctx := context.Background()
+
+		//add random data here too
 		dataS := &StudentS{
 			Id:           gofakeit.UUID(),
 			Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),

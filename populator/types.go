@@ -1,42 +1,42 @@
 package populator
 
 type Employee struct {
-	Id       string  `json:"Id,omitempty"`
-	Name     string  `json:"Name,omitempty"`
-	Age      int     `json:"Age,omitempty"`
-	Salary   float64 `json:"Salary,omitempty"`
-	Phone    []Phone `json:"Phone,omitempty"`
-	Position string  `json:"Position,omitempty"`
+	Id       string  `json:"Id"`
+	Name     string  `json:"Name"`
+	Age      int     `json:"Age"`
+	Salary   float64 `json:"Salary"`
+	Phone    []Phone `json:"Phone"`
+	Position string  `json:"Position"`
 }
 
 type EmployeeS struct {
-	Id        string  `json:"Id,omitempty"`
-	Name      string  `json:"Name,omitempty"`
-	Age       int     `json:"Age,omitempty"`
-	Salary    float64 `json:"Salary,omitempty"`
-	Phone     []Phone `json:"Phone,omitempty"`
-	Position  string  `json:"Position,omitempty"`
-	WorkHours int     `json:"WorkHours,omitempty"`
+	Id        string  `json:"Id"`
+	Name      string  `json:"Name"`
+	Age       int     `json:"Age"`
+	Salary    float64 `json:"Salary"`
+	Phone     []Phone `json:"Phone"`
+	Position  string  `json:"Position"`
+	WorkHours int     `json:"WorkHours"`
 }
 
 type Student struct {
-	Id      string `json:"Id,omitempty"`
-	Name    string `json:"Name,omitempty"`
-	Age     int    `json:"Age,omitempty"`
-	Subject string `json:"Subject,omitempty"`
+	Id      string `json:"Id"`
+	Name    string `json:"Name"`
+	Age     int    `json:"Age"`
+	Subject string `json:"Subject"`
 	// Phone         []Phone
 }
 
 type StudentS struct {
-	Id      string `json:"Id,omitempty"`
-	Name    string `json:"Name,omitempty"`
-	Age     int    `json:"Age,omitempty"`
-	Subject string `json:"Subject,omitempty"`
+	Id      string `json:"Id"`
+	Name    string `json:"Name"`
+	Age     int    `json:"Age"`
+	Subject string `json:"Subject"`
 	// Phone         []Phone
-	Is_Graduated bool `json:"Is_Graduated,omitempty"`
+	Is_Graduated bool `json:"Is_Graduated"`
 }
 
 type Phone struct {
-	Personal string `json:"Personal,omitempty"`
-	Work     string `json:"Work,omitempty"`
+	Personal string `json:"Personal"`
+	Work     string `json:"Work"`
 }
