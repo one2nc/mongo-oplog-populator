@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 
 		// mongoConnection := config.GetMongoConnection(operations, client)
 
-		populator.MakePopulateJson(client, operations)
+		populator.Populate(client, operations)
 
 		//Disconnect Client
 		config.DisconnectClient(client)
