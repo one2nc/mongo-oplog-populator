@@ -40,3 +40,7 @@ type Phone struct {
 	Personal string `json:"Personal"`
 	Work     string `json:"Work"`
 }
+
+type OperationSize struct {
+	insert, update, delete int
+}
