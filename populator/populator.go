@@ -2,13 +2,11 @@ package populator
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
 	"os"
 	"os/signal"
-	"reflect"
 	"time"
 
 	"github.com/brianvoe/gofakeit"
@@ -49,7 +47,8 @@ func Populate(mclient *mongo.Client, operations int) []interface{} {
 	dataList := generateData(opSize.insert)
 	var updateCount = 0
 	var deleteCount = 0
-	var insertedDataList []interface{}
+	var insertedDataList []Data
+	//var updatedDataList []Data
 	var results []interface{}
 	rand.Seed(time.Now().UnixNano())
 
@@ -64,7 +63,6 @@ func Populate(mclient *mongo.Client, operations int) []interface{} {
 		//update
 		if isMultipleOfSevenEightOrEleven(i) {
 			if updateCount < opSize.update {
-				// println("total update:%v , current update:%v", opSize.update, updateCount)
 				updateResult, err := updateData(insertedDataList[i])
 				if err != nil {
 					fmt.Printf("Failed to update data at index %d: %s\n", i, err.Error())
@@ -79,7 +77,6 @@ func Populate(mclient *mongo.Client, operations int) []interface{} {
 		//delete
 		if isMultipleOfTwoNineortweleve(i) {
 			if deleteCount < opSize.delete {
-				// println("total delete:%v , current delete:%v", opSize.delete, deleteCount)
 				indx := rand.Intn(i)
 				deleteResult, err := deleteData(insertedDataList[indx])
 				if err != nil {
@@ -98,6 +95,7 @@ func Populate(mclient *mongo.Client, operations int) []interface{} {
 	//insert data for alter table
 	data := generateDataAlterTable(3)
 	for i := 0; i < len(data); i++ {
+		fmt.Println("Alter successfull")
 		insertedData, err := insertData(data[i])
 		if err != nil {
 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
@@ -126,51 +124,34 @@ func calculateOperationSize(totalOperation int) *OperationSize {
 
 	return opSize
 }
-func generateData(operations int) []interface{} {
+func generateData(operations int) []Data {
 	x := operations / 2
-	var data []interface{}
+	var data []Data
 	for i := 0; i < x; i++ {
-		emp := &Employee{}
-		empData := emp.GetData()
-		data = append(data, empData)
-
-		student := &Student{}
-		studentData := student.GetData()
-		data = append(data, studentData)
+		data = append(data, &Employee{})
+		data = append(data, &Student{})
 	}
 	shuffle(data)
 	return data
 }
 
-func generateDataAlterTable(operations int) []interface{} {
-	var data []interface{}
+func generateDataAlterTable(operations int) []Data {
+	var data []Data
 	for i := 0; i < operations; i++ {
-		emp := &EmployeeS{}
-		empData := emp.GetData()
-		data = append(data, empData)
-
-		student := &StudentS{}
-		studentData := student.GetData()
-		data = append(data, studentData)
+		data = append(data, &Employee{})
+		data = append(data, &Student{})
 	}
 	shuffle(data)
 	return data
 }
 
-func shuffle(slice []interface{}) {
+func shuffle(slice []Data) {
 	for i := range slice {
 		j := rand.Intn(i + 1)
 		slice[i], slice[j] = slice[j], slice[i]
 	}
 }
 
-func getType(data interface{}) reflect.Type {
-	t := reflect.TypeOf(data)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	return t
-}
 func isMultipleOfSevenEightOrEleven(n int) bool {
 	if n == 0 {
 		return false
@@ -185,18 +166,8 @@ func isMultipleOfTwoNineortweleve(n int) bool {
 	return n%2 == 0 || n%9 == 0 || n%12 == 0 || n == 10
 }
 
-func insertData(data interface{}) (*mongo.InsertOneResult, error) {
-	value := reflect.ValueOf(data)
-	method := value.MethodByName("GetCollection")
-	if !method.IsValid() {
-		return nil, errors.New("GetCollection method not found")
-	}
-
-	result := method.Call(nil)
-	if len(result) != 1 || result[0].IsNil() {
-		return nil, errors.New("collection not found")
-	}
-	collection := result[0].Interface().(*mongo.Collection)
+func insertData(data Data) (*mongo.InsertOneResult, error) {
+	collection := data.GetCollection()
 	//extract
 	InsertOneResult, err := collection.InsertOne(ctx, data)
 	if err != nil {
@@ -205,31 +176,9 @@ func insertData(data interface{}) (*mongo.InsertOneResult, error) {
 	return InsertOneResult, nil
 }
 
-func updateData(data interface{}) (*mongo.UpdateResult, error) {
-	value := reflect.ValueOf(data)
-	method := value.MethodByName("GetCollection")
-	if !method.IsValid() {
-		return nil, errors.New("GetCollection method not found")
-	}
-
-	result := method.Call(nil)
-	if len(result) != 1 || result[0].IsNil() {
-		return nil, errors.New("collection not found")
-	}
-
-	updateMethod := value.MethodByName("GetUpdate")
-	if !updateMethod.IsValid() {
-		return nil, errors.New("GetUpdate method not found")
-	}
-
-	updateResult := updateMethod.Call(nil)
-	if len(updateResult) != 1 || updateResult[0].IsNil() {
-		return nil, errors.New("update is empty or nil")
-	}
-
-	update := updateResult[0].Interface().(bson.M)
-	collection := result[0].Interface().(*mongo.Collection)
-
+func updateData(data Data) (*mongo.UpdateResult, error) {
+	collection := data.GetCollection()
+	update := data.GetUpdate()
 	updateOneResult, err := collection.UpdateOne(ctx, data, update)
 	if err != nil {
 		return nil, err
@@ -237,19 +186,8 @@ func updateData(data interface{}) (*mongo.UpdateResult, error) {
 	return updateOneResult, nil
 }
 
-func deleteData(data interface{}) (*mongo.DeleteResult, error) {
-	value := reflect.ValueOf(data)
-	method := value.MethodByName("GetCollection")
-	if !method.IsValid() {
-		return nil, errors.New("GetCollection method not found")
-	}
-
-	result := method.Call(nil)
-	if len(result) != 1 || result[0].IsNil() {
-		return nil, errors.New("collection not found")
-	}
-	collection := result[0].Interface().(*mongo.Collection)
-
+func deleteData(data Data) (*mongo.DeleteResult, error) {
+	collection := data.GetCollection()
 	deleteResult, err := collection.DeleteOne(ctx, data)
 	if err != nil {
 		return nil, err
@@ -269,7 +207,7 @@ func (s *Student) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *StudentS) GetCollection() *mongo.Collection {
+func (s *StudentU) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
@@ -282,13 +220,20 @@ func (s *Student) GetData() interface{} {
 	}
 }
 
-func (s *StudentS) GetData() interface{} {
-	return &StudentS{
+func (s *StudentU) GetData() interface{} {
+	return &StudentU{
 		Id:           gofakeit.UUID(),
 		Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:          rand.Intn(10) + 18,
 		Subject:      subjects[rand.Intn(len(subjects))],
 		Is_Graduated: gofakeit.Bool(),
+	}
+}
+func (s *StudentU) GetUpdateSet() interface{} {
+	return bson.M{
+		"$set": bson.M{
+			"Age": rand.Intn(10) + 18,
+		},
 	}
 }
 
@@ -300,11 +245,28 @@ func (s *Student) GetUpdateSet() interface{} {
 	}
 }
 
+func (s *StudentU) GetUpdateUnset() interface{} {
+	return bson.M{
+		"$unset": bson.M{
+			"Subject": "",
+		},
+	}
+}
+
 func (s *Student) GetUpdateUnset() interface{} {
 	return bson.M{
 		"$unset": bson.M{
 			"Subject": "",
 		},
+	}
+}
+
+func (s *StudentU) GetUpdate() interface{} {
+	updateS := gofakeit.Bool()
+	if updateS {
+		return s.GetUpdateSet()
+	} else {
+		return s.GetUpdateUnset()
 	}
 }
 
@@ -321,7 +283,7 @@ func (e *Employee) GetCollection() *mongo.Collection {
 	return client.Database("Employee").Collection("employees")
 }
 
-func (e *EmployeeS) GetCollection() *mongo.Collection {
+func (e *EmployeeU) GetCollection() *mongo.Collection {
 	return client.Database("Employee").Collection("employees")
 }
 
@@ -336,14 +298,22 @@ func (e *Employee) GetData() interface{} {
 	}
 }
 
-func (e *EmployeeS) GetData() interface{} {
-	return &EmployeeS{
+func (e *EmployeeU) GetData() interface{} {
+	return &EmployeeU{
 		Id:        gofakeit.UUID(),
 		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:       rand.Intn(30) + 20,
 		Salary:    rand.Float64() * 10000,
 		Position:  positions[rand.Intn(len(positions))],
 		WorkHours: rand.Intn(8) + 4,
+	}
+}
+
+func (e *EmployeeU) GetUpdateSet() interface{} {
+	return bson.M{
+		"$set": bson.M{
+			"Age": rand.Intn(10) + 18,
+		},
 	}
 }
 
@@ -354,12 +324,28 @@ func (e *Employee) GetUpdateSet() interface{} {
 		},
 	}
 }
+func (e *EmployeeU) GetUpdateUnset() interface{} {
+	return bson.M{
+		"$unset": bson.M{
+			"Position": "",
+		},
+	}
+}
 
 func (e *Employee) GetUpdateUnset() interface{} {
 	return bson.M{
 		"$unset": bson.M{
 			"Position": "",
 		},
+	}
+}
+
+func (e *EmployeeU) GetUpdate() interface{} {
+	updateE := gofakeit.Bool()
+	if updateE {
+		return e.GetUpdateSet()
+	} else {
+		return e.GetUpdateUnset()
 	}
 }
 
