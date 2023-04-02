@@ -14,8 +14,8 @@
 1. Setup mongo 
   `make setup`
 
-2.  Run `./mongopop --op 10` for bulk operations 
-        `./mongopop --b 10` for stream operations
+2.  Run `./mongopop -b 10` for bulk operations 
+        `./mongopop -s 10` for stream operations
      *  *./mongopop* is the binary file
      *  *--op* is the flag for bulk operation
      *  *--b* is the flag for stream operation

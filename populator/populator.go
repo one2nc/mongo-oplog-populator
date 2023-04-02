@@ -19,7 +19,7 @@ var ctx = context.Background()
 var subjects = []string{"Maths", "Science", "Social Studies", "English"}
 var positions = []string{"Manager", "Engineer", "Salesman", "Developer"}
 
-func BatchInsert(mclient *mongo.Client, batchInsert int) {
+func StreamInsert(mclient *mongo.Client, batchInsert int) {
 
 	ticker := time.NewTicker(time.Second * 1)
 	interrupt := make(chan os.Signal, 1)
