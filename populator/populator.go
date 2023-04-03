@@ -128,8 +128,12 @@ func generateData(operations int) []Data {
 	x := operations / 2
 	var data []Data
 	for i := 0; i < x; i++ {
-		data = append(data, &Employee{})
-		data = append(data, &Student{})
+		emp := &Employee{}
+		empData := emp.GetData()
+		data = append(data, empData)
+		student := &Student{}
+		studentData := student.GetData()
+		data = append(data, studentData)
 	}
 	shuffle(data)
 	return data
@@ -138,8 +142,13 @@ func generateData(operations int) []Data {
 func generateDataAlterTable(operations int) []Data {
 	var data []Data
 	for i := 0; i < operations; i++ {
-		data = append(data, &Employee{})
-		data = append(data, &Student{})
+		emp := &Employee{}
+		empData := emp.GetData()
+		data = append(data, empData)
+		student := &Student{}
+		studentData := student.GetData()
+		data = append(data, studentData)
+
 	}
 	shuffle(data)
 	return data
@@ -197,7 +206,7 @@ func deleteData(data Data) (*mongo.DeleteResult, error) {
 
 type Data interface {
 	GetCollection() *mongo.Collection
-	GetData() interface{}
+	GetData() Data
 	GetUpdateSet() interface{}
 	GetUpdateUnset() interface{}
 	GetUpdate() interface{}
@@ -211,7 +220,7 @@ func (s *StudentU) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *Student) GetData() interface{} {
+func (s *Student) GetData() Data {
 	return &Student{
 		Id:      gofakeit.UUID(),
 		Name:    gofakeit.FirstName() + " " + gofakeit.LastName(),
@@ -220,7 +229,7 @@ func (s *Student) GetData() interface{} {
 	}
 }
 
-func (s *StudentU) GetData() interface{} {
+func (s *StudentU) GetData() Data {
 	return &StudentU{
 		Id:           gofakeit.UUID(),
 		Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
@@ -287,7 +296,7 @@ func (e *EmployeeU) GetCollection() *mongo.Collection {
 	return client.Database("Employee").Collection("employees")
 }
 
-func (e *Employee) GetData() interface{} {
+func (e *Employee) GetData() Data {
 	return &Employee{
 		Id:       gofakeit.UUID(),
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
