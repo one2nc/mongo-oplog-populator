@@ -1,7 +1,9 @@
 # Mongo-oplog-populator
 
-![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
+This repo creates two collection - employees and students in Mongo and populates some records in those tables.
+This repo is a companion repo for https://github.com/one2nc/mongo-oplog-to-sql
 
+![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
 
  System supports populating the data in Mongo Database. The operations can be performed in a bulk form or in stream form.
 
