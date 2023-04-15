@@ -37,6 +37,7 @@ type StudentU struct {
 }
 
 type Phone struct {
+	Id       string `json:"Id"`
 	Personal string `json:"Personal"`
 	Work     string `json:"Work"`
 }

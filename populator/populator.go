@@ -148,7 +148,6 @@ func generateDataAlterTable(operations int) []Data {
 		student := &Student{}
 		studentData := student.GetData()
 		data = append(data, studentData)
-
 	}
 	shuffle(data)
 	return data
@@ -302,7 +301,7 @@ func (e *Employee) GetData() Data {
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:      rand.Intn(30) + 20,
 		Salary:   rand.Float64() * 10000,
-		Phone:    []Phone{{gofakeit.Phone(), gofakeit.Phone()}},
+		Phone:    []Phone{{gofakeit.UUID(), gofakeit.Phone(), gofakeit.Phone()}},
 		Position: positions[rand.Intn(len(positions))],
 	}
 }

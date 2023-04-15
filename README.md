@@ -27,9 +27,9 @@
 
 5. To see the oplog generated `db.oplog.rs.find({})`
     *  `db.oplog.rs.find({})` to see all oplogs
-    *  `db.oplog.rs.find({i})` to see the insertions
-    *  `db.oplog.rs.find({u})` to see the updates
-    *  `db.oplog.rs.find({d})` to see the deletions
+    *  `db.oplog.rs.find({op:"i"})` to see the insertions
+    *  `db.oplog.rs.find({op:"u"})` to see the updates
+    *  `db.oplog.rs.find({op:"d"})` to see the deletions
 
 6. Set down mongo
     `make setup-down`
