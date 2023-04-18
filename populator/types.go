@@ -9,7 +9,7 @@ type Employee struct {
 	Position string  `json:"Position"`
 }
 
-type EmployeeU struct {
+type EmployeeA struct {
 	Id        string  `json:"Id"`
 	Name      string  `json:"Name"`
 	Age       int     `json:"Age"`
@@ -27,7 +27,7 @@ type Student struct {
 	// Phone         []Phone
 }
 
-type StudentU struct {
+type StudentA struct {
 	Id      string `json:"Id"`
 	Name    string `json:"Name"`
 	Age     int    `json:"Age"`

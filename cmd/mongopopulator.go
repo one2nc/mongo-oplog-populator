@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/populator"
 	"os"
@@ -26,10 +25,7 @@ var rootCmd = &cobra.Command{
 		if streamInsert > 0 {
 			populator.StreamInsert(client, streamInsert)
 		} else if bulkInsert > 0 {
-			result := populator.Populate(client, bulkInsert)
-			for i := 0; i < len(result); i++ {
-				fmt.Printf("result: %v\n", result[i])
-			}
+			populator.Populate(client, bulkInsert)
 		}
 		//Disconnect Client
 		config.DisconnectClient(client)
