@@ -287,11 +287,11 @@ func (s *Student) GetUpdate() interface{} {
 }
 
 func (e *Employee) GetCollection() *mongo.Collection {
-	return client.Database("Employee").Collection("employees")
+	return client.Database("employee").Collection("employees")
 }
 
 func (e *EmployeeA) GetCollection() *mongo.Collection {
-	return client.Database("Employee").Collection("employees")
+	return client.Database("employee").Collection("employees")
 }
 
 func (e *Employee) GetData() Data {
@@ -300,7 +300,8 @@ func (e *Employee) GetData() Data {
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:      rand.Intn(30) + 20,
 		Salary:   rand.Float64() * 10000,
-		Phone:    []Phone{{gofakeit.UUID(), gofakeit.Phone(), gofakeit.Phone()}},
+		Phone:    Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address:  []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
 		Position: positions[rand.Intn(len(positions))],
 	}
 }
@@ -311,6 +312,8 @@ func (e *EmployeeA) GetData() Data {
 		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:       rand.Intn(30) + 20,
 		Salary:    rand.Float64() * 10000,
+		Phone:     Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address:   []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
 		Position:  positions[rand.Intn(len(positions))],
 		WorkHours: rand.Intn(8) + 4,
 	}
