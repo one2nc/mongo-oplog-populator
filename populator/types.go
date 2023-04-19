@@ -1,45 +1,39 @@
 package populator
 
 type Employee struct {
-	Id       string  `json:"Id"`
-	Name     string  `json:"Name"`
-	Age      int     `json:"Age"`
-	Salary   float64 `json:"Salary"`
-	Phone    []Phone `json:"Phone"`
-	Position string  `json:"Position"`
+	Name     string
+	Age      int
+	Salary   float64
+	Phone    []Phone
+	Position string
 }
 
 type EmployeeU struct {
-	Id        string  `json:"Id"`
-	Name      string  `json:"Name"`
-	Age       int     `json:"Age"`
-	Salary    float64 `json:"Salary"`
-	Phone     []Phone `json:"Phone"`
-	Position  string  `json:"Position"`
-	WorkHours int     `json:"WorkHours"`
+	Name      string
+	Age       int
+	Salary    float64
+	Phone     []Phone
+	Position  string
+	WorkHours int
 }
 
 type Student struct {
-	Id      string `json:"Id"`
-	Name    string `json:"Name"`
-	Age     int    `json:"Age"`
-	Subject string `json:"Subject"`
-	// Phone         []Phone
+	Name    string
+	Age     int
+	Subject string
 }
 
 type StudentU struct {
-	Id      string `json:"Id"`
-	Name    string `json:"Name"`
-	Age     int    `json:"Age"`
-	Subject string `json:"Subject"`
-	// Phone         []Phone
-	Is_Graduated bool `json:"Is_Graduated"`
+	Name         string
+	Age          int
+	Subject      string
+	Is_Graduated bool
 }
 
 type Phone struct {
-	Id       string `json:"Id"`
-	Personal string `json:"Personal"`
-	Work     string `json:"Work"`
+	Id       string
+	Personal string
+	Work     string
 }
 
 type OperationSize struct {

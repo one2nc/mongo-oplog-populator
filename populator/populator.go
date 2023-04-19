@@ -221,7 +221,6 @@ func (s *StudentU) GetCollection() *mongo.Collection {
 
 func (s *Student) GetData() Data {
 	return &Student{
-		Id:      gofakeit.UUID(),
 		Name:    gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:     rand.Intn(10) + 18,
 		Subject: subjects[rand.Intn(len(subjects))],
@@ -230,7 +229,6 @@ func (s *Student) GetData() Data {
 
 func (s *StudentU) GetData() Data {
 	return &StudentU{
-		Id:           gofakeit.UUID(),
 		Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:          rand.Intn(10) + 18,
 		Subject:      subjects[rand.Intn(len(subjects))],
@@ -288,16 +286,15 @@ func (s *Student) GetUpdate() interface{} {
 }
 
 func (e *Employee) GetCollection() *mongo.Collection {
-	return client.Database("Employee").Collection("employees")
+	return client.Database("employee").Collection("employees")
 }
 
 func (e *EmployeeU) GetCollection() *mongo.Collection {
-	return client.Database("Employee").Collection("employees")
+	return client.Database("employee").Collection("employees")
 }
 
 func (e *Employee) GetData() Data {
 	return &Employee{
-		Id:       gofakeit.UUID(),
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:      rand.Intn(30) + 20,
 		Salary:   rand.Float64() * 10000,
@@ -308,7 +305,6 @@ func (e *Employee) GetData() Data {
 
 func (e *EmployeeU) GetData() interface{} {
 	return &EmployeeU{
-		Id:        gofakeit.UUID(),
 		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:       rand.Intn(30) + 20,
 		Salary:    rand.Float64() * 10000,
