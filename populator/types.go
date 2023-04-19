@@ -4,15 +4,17 @@ type Employee struct {
 	Name     string
 	Age      int
 	Salary   float64
-	Phone    []Phone
+	Phone    Phone
+	Address  []Address
 	Position string
 }
 
-type EmployeeU struct {
+type EmployeeA struct {
 	Name      string
 	Age       int
 	Salary    float64
-	Phone     []Phone
+	Phone     Phone
+	Address   []Address
 	Position  string
 	WorkHours int
 }
@@ -23,7 +25,7 @@ type Student struct {
 	Subject string
 }
 
-type StudentU struct {
+type StudentA struct {
 	Name         string
 	Age          int
 	Subject      string
@@ -31,11 +33,14 @@ type StudentU struct {
 }
 
 type Phone struct {
-	Id       string
 	Personal string
 	Work     string
 }
 
+type Address struct {
+	Zip   string
+	Line1 string
+}
 type OperationSize struct {
 	insert, update, delete int
 }

@@ -41,7 +41,6 @@ func StreamInsert(mclient *mongo.Client, batchInsert int) {
 }
 
 func Populate(mclient *mongo.Client, operations int) []interface{} {
-
 	client = mclient
 	opSize := calculateOperationSize(operations)
 	dataList := generateData(opSize.insert)
@@ -142,10 +141,10 @@ func generateData(operations int) []Data {
 func generateDataAlterTable(operations int) []Data {
 	var data []Data
 	for i := 0; i < operations; i++ {
-		emp := &Employee{}
+		emp := &EmployeeA{}
 		empData := emp.GetData()
 		data = append(data, empData)
-		student := &Student{}
+		student := &StudentA{}
 		studentData := student.GetData()
 		data = append(data, studentData)
 	}
@@ -215,7 +214,7 @@ func (s *Student) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *StudentU) GetCollection() *mongo.Collection {
+func (s *StudentA) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
@@ -227,15 +226,15 @@ func (s *Student) GetData() Data {
 	}
 }
 
-func (s *StudentU) GetData() Data {
-	return &StudentU{
+func (s *StudentA) GetData() Data {
+	return &StudentA{
 		Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:          rand.Intn(10) + 18,
 		Subject:      subjects[rand.Intn(len(subjects))],
 		Is_Graduated: gofakeit.Bool(),
 	}
 }
-func (s *StudentU) GetUpdateSet() interface{} {
+func (s *StudentA) GetUpdateSet() interface{} {
 	return bson.M{
 		"$set": bson.M{
 			"Age": rand.Intn(10) + 18,
@@ -251,7 +250,7 @@ func (s *Student) GetUpdateSet() interface{} {
 	}
 }
 
-func (s *StudentU) GetUpdateUnset() interface{} {
+func (s *StudentA) GetUpdateUnset() interface{} {
 	return bson.M{
 		"$unset": bson.M{
 			"Subject": "",
@@ -267,7 +266,7 @@ func (s *Student) GetUpdateUnset() interface{} {
 	}
 }
 
-func (s *StudentU) GetUpdate() interface{} {
+func (s *StudentA) GetUpdate() interface{} {
 	updateS := gofakeit.Bool()
 	if updateS {
 		return s.GetUpdateSet()
@@ -289,7 +288,7 @@ func (e *Employee) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
-func (e *EmployeeU) GetCollection() *mongo.Collection {
+func (e *EmployeeA) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
@@ -298,22 +297,25 @@ func (e *Employee) GetData() Data {
 		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:      rand.Intn(30) + 20,
 		Salary:   rand.Float64() * 10000,
-		Phone:    []Phone{{gofakeit.UUID(), gofakeit.Phone(), gofakeit.Phone()}},
+		Phone:    Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address:  []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
 		Position: positions[rand.Intn(len(positions))],
 	}
 }
 
-func (e *EmployeeU) GetData() interface{} {
-	return &EmployeeU{
+func (e *EmployeeA) GetData() Data {
+	return &EmployeeA{
 		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
 		Age:       rand.Intn(30) + 20,
 		Salary:    rand.Float64() * 10000,
+		Phone:     Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address:   []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
 		Position:  positions[rand.Intn(len(positions))],
 		WorkHours: rand.Intn(8) + 4,
 	}
 }
 
-func (e *EmployeeU) GetUpdateSet() interface{} {
+func (e *EmployeeA) GetUpdateSet() interface{} {
 	return bson.M{
 		"$set": bson.M{
 			"Age": rand.Intn(10) + 18,
@@ -328,7 +330,7 @@ func (e *Employee) GetUpdateSet() interface{} {
 		},
 	}
 }
-func (e *EmployeeU) GetUpdateUnset() interface{} {
+func (e *EmployeeA) GetUpdateUnset() interface{} {
 	return bson.M{
 		"$unset": bson.M{
 			"Position": "",
@@ -344,7 +346,7 @@ func (e *Employee) GetUpdateUnset() interface{} {
 	}
 }
 
-func (e *EmployeeU) GetUpdate() interface{} {
+func (e *EmployeeA) GetUpdate() interface{} {
 	updateE := gofakeit.Bool()
 	if updateE {
 		return e.GetUpdateSet()
