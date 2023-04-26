@@ -4,7 +4,14 @@ services:
   mongo1:
     image: mongo
     container_name: mongo1
-    command: [ "--replSet", "my-replica-set", "--bind_ip_all", "--port", "30001" ]
+    command:
+      [
+        "--replSet",
+        "my-replica-set",
+        "--bind_ip_all",
+        "--port",
+        "30001"
+      ]
     volumes:
       - ./data/mongo-1:/data/db
     ports:
@@ -19,7 +26,14 @@ services:
   mongo2:
     image: mongo
     container_name: mongo2
-    command: [ "--replSet", "my-replica-set", "--bind_ip_all", "--port", "30002" ]
+    command:
+      [
+        "--replSet",
+        "my-replica-set",
+        "--bind_ip_all",
+        "--port",
+        "30002"
+      ]
     volumes:
       - ./data/mongo-2:/data/db
     ports:
@@ -30,7 +44,14 @@ services:
   mongo3:
     image: mongo
     container_name: mongo3
-    command: [ "--replSet", "my-replica-set", "--bind_ip_all", "--port", "30003" ]
+    command:
+      [
+        "--replSet",
+        "my-replica-set",
+        "--bind_ip_all",
+        "--port",
+        "30003"
+      ]
     volumes:
       - ./data/mongo-3:/data/db
     ports:
@@ -38,5 +59,19 @@ services:
     networks:
       - mongoCluster
 
+  mongo-express:
+    image: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo1
+      - ME_CONFIG_MONGODB_PORT=30001
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=false
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=local
+    depends_on:
+      - mongo1
+    ports:
+      - "8888:8081"
+    networks:
+      - mongoCluster
+
 networks:
-  mongoCluster: { }
+  mongoCluster: {}
