@@ -3,33 +3,44 @@
 ![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
 
 
-> System supports populating the data in Mongo oplog. The operations can be performed in a bulk form or in stream form.
->
->> *Out of total Operations:*
-  >> - 85% Insert
-  >> - 10% updates
-  >> - 5% deletes
->
-### Setup 
-1. Setup mongo 
-  `make setup`
+ System supports populating the data in Mongo Database. The operations can be performed in a bulk form or in stream form.
 
-2.  Run `./mongopop -b 10` for bulk operations 
+> *Out of total Operations:*
+  > - 85% Insert
+  > - 10% updates
+  > - 5% deletes
+
+## Features
+1. Bulk Insert: Perform fixed number of operations provided by the user and terminates the program
+
+2. Stream Insert: Perform fixed number of operations provided by user per second for indefinite time. The program stops only when the user gives a stop signal (ctrl+c) 
+
+### Setup 
+1. Setup mongo: Spins up 3 container of mongo
+  
+   `make setup`
+
+2. Build the application: Builds a binary of mongo-oplog-populator
+   
+   `make build`
+
+2.  Run `./mongopop -b 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
      *  *./mongopop* is the binary file
-     *  *--op* is the flag for bulk operation
-     *  *--b* is the flag for stream operation
-     *  *10* is the total number of operations to be performed
+     *  *-b* is the flag for bulk operation
+     *  *-s* is the flag for stream operation
+     *  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
+    
 
-3. Run docker `make connect` 
+3. To connect to mongo cluster `make connect`
 
-4. Change the database to local `use local`
+4. To check oplogs in mongo execute the following commands:
+    - Change the database to local `use local` since all the oplogs are located in a file oplog.rs which is in local database
+    - To see the oplogs generated:
+      *  `db.oplog.rs.find({})` to see all oplogs
+      *  `db.oplog.rs.find({op:"i"})` to see the insertions
+      *  `db.oplog.rs.find({op:"u"})` to see the updates
+      *  `db.oplog.rs.find({op:"d"})` to see the deletions
 
-5. To see the oplog generated `db.oplog.rs.find({})`
-    *  `db.oplog.rs.find({})` to see all oplogs
-    *  `db.oplog.rs.find({op:"i"})` to see the insertions
-    *  `db.oplog.rs.find({op:"u"})` to see the updates
-    *  `db.oplog.rs.find({op:"d"})` to see the deletions
-
-6. Set down mongo
+6. Tear down mongo
     `make setup-down`
