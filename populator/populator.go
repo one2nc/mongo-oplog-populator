@@ -235,35 +235,19 @@ func (s *StudentA) GetData() Data {
 	}
 }
 func (s *StudentA) GetUpdateSet() interface{} {
-	return bson.M{
-		"$set": bson.M{
-			"Age": rand.Intn(10) + 18,
-		},
-	}
+	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
 }
 
 func (s *Student) GetUpdateSet() interface{} {
-	return bson.M{
-		"$set": bson.M{
-			"Age": rand.Intn(10) + 18,
-		},
-	}
+	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
 }
 
 func (s *StudentA) GetUpdateUnset() interface{} {
-	return bson.M{
-		"$unset": bson.M{
-			"Subject": "",
-		},
-	}
+	return bson.M{"$unset": bson.M{"subject": ""}}
 }
 
 func (s *Student) GetUpdateUnset() interface{} {
-	return bson.M{
-		"$unset": bson.M{
-			"Subject": "",
-		},
-	}
+	return bson.M{"$unset": bson.M{"subject": ""}}
 }
 
 func (s *StudentA) GetUpdate() interface{} {
@@ -294,56 +278,46 @@ func (e *EmployeeA) GetCollection() *mongo.Collection {
 
 func (e *Employee) GetData() Data {
 	return &Employee{
-		Name:     gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:      rand.Intn(30) + 20,
-		Salary:   rand.Float64() * 10000,
-		Phone:    Phone{gofakeit.Phone(), gofakeit.Phone()},
-		Address:  []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
+		Name:   gofakeit.FirstName() + " " + gofakeit.LastName(),
+		Age:    rand.Intn(30) + 20,
+		Salary: rand.Float64() * 10000,
+		Phone:  Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address: []Address{
+			{gofakeit.Zip(), gofakeit.Address().Street},
+			{gofakeit.Zip(), gofakeit.Address().Street},
+		},
 		Position: positions[rand.Intn(len(positions))],
 	}
 }
 
 func (e *EmployeeA) GetData() Data {
 	return &EmployeeA{
-		Name:      gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:       rand.Intn(30) + 20,
-		Salary:    rand.Float64() * 10000,
-		Phone:     Phone{gofakeit.Phone(), gofakeit.Phone()},
-		Address:   []Address{{gofakeit.Zip(), gofakeit.Address().Street}, {gofakeit.Zip(), gofakeit.Address().Street}},
+		Name:   gofakeit.FirstName() + " " + gofakeit.LastName(),
+		Age:    rand.Intn(30) + 20,
+		Salary: rand.Float64() * 10000,
+		Phone:  Phone{gofakeit.Phone(), gofakeit.Phone()},
+		Address: []Address{
+			{gofakeit.Zip(), gofakeit.Address().Street},
+			{gofakeit.Zip(), gofakeit.Address().Street},
+		},
 		Position:  positions[rand.Intn(len(positions))],
 		WorkHours: rand.Intn(8) + 4,
 	}
 }
 
 func (e *EmployeeA) GetUpdateSet() interface{} {
-	return bson.M{
-		"$set": bson.M{
-			"Age": rand.Intn(10) + 18,
-		},
-	}
+	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
 }
 
 func (e *Employee) GetUpdateSet() interface{} {
-	return bson.M{
-		"$set": bson.M{
-			"Age": rand.Intn(10) + 18,
-		},
-	}
+	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
 }
 func (e *EmployeeA) GetUpdateUnset() interface{} {
-	return bson.M{
-		"$unset": bson.M{
-			"Position": "",
-		},
-	}
+	return bson.M{"$unset": bson.M{"position": ""}}
 }
 
 func (e *Employee) GetUpdateUnset() interface{} {
-	return bson.M{
-		"$unset": bson.M{
-			"Position": "",
-		},
-	}
+	return bson.M{"$unset": bson.M{"position": ""}}
 }
 
 func (e *EmployeeA) GetUpdate() interface{} {
