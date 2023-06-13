@@ -11,7 +11,7 @@ setup-down:
 	rm -rf ./data
 
 build:
-	go build -o mongopop main.go
+	go build -o mongopop ./cmd/mongo-populator
 
 populate: build
 	./mongopop oplogpop 

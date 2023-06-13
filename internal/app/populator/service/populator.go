@@ -1,12 +1,10 @@
-package populator
+package service
 
 import (
 	"context"
 	"fmt"
 	"math"
 	"math/rand"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/brianvoe/gofakeit"
@@ -18,27 +16,6 @@ var client *mongo.Client
 var ctx = context.Background()
 var subjects = []string{"Maths", "Science", "Social Studies", "English"}
 var positions = []string{"Manager", "Engineer", "Salesman", "Developer"}
-
-func StreamInsert(mclient *mongo.Client, batchInsert int) {
-
-	ticker := time.NewTicker(time.Second * 1)
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	a := 1
-	for {
-		select {
-		case <-ticker.C:
-			println("Second : ", a)
-			go Populate(mclient, batchInsert)
-			a++
-		case <-interrupt:
-			fmt.Println("Interrupt signal received, stopping program...")
-			ticker.Stop()
-			return
-		}
-	}
-}
 
 func Populate(mclient *mongo.Client, operations int) []interface{} {
 	client = mclient

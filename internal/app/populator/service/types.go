@@ -1,4 +1,4 @@
-package populator
+package service
 
 type Employee struct {
 	Name     string
