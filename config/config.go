@@ -1,23 +1,36 @@
 package config
 
 import (
-	"context"
-	"fmt"
+	"log"
+	"os"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/joho/godotenv"
 )
 
-func GetClient() *mongo.Client {
-	clientOptions := options.Client().ApplyURI("mongodb://127.0.0.1:30001").SetDirect(true)
-	client, err := mongo.Connect(context.Background(), clientOptions)
-	if err != nil {
-		fmt.Println("Error connecting to MongoDB:", err)
-		return nil
-	}
-	return client
+const (
+	MONGO_URI     = "MONGO_URI"
+	CSV_FILE_NAME = "CSV_FILE_NAME"
+	ENV           = ".env"
+)
+
+type Config struct {
+	MongoUri    string
+	CsvFileName string
 }
 
-func DisconnectClient(client *mongo.Client) {
-	client.Disconnect(context.Background())
+func Load() Config {
+	err := godotenv.Load(ENV)
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	cfg := Config{
+		MongoUri:    ReadFromEnvFile(MONGO_URI),
+		CsvFileName: ReadFromEnvFile(CSV_FILE_NAME),
+	}
+	return cfg
+}
+
+func ReadFromEnvFile(key string) string {
+	return os.Getenv(key)
 }

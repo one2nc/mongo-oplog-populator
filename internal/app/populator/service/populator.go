@@ -5,26 +5,47 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"mongo-oplog-populator/config"
+	"mongo-oplog-populator/internal/app/populator/reader"
+	"mongo-oplog-populator/internal/app/populator/types"
+
+	"os"
 	"time"
 
 	"github.com/brianvoe/gofakeit"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// remove client
 var client *mongo.Client
-var ctx = context.Background()
-var subjects = []string{"Maths", "Science", "Social Studies", "English"}
-var positions = []string{"Manager", "Engineer", "Salesman", "Developer"}
 
-func Populate(mclient *mongo.Client, operations int) []interface{} {
+var ctx = context.Background()
+
+var attributes types.Attributes
+
+func Populate(mclient *mongo.Client, operations int, cfg config.Config) []interface{} {
 	client = mclient
+
 	opSize := calculateOperationSize(operations)
-	dataList := generateData(opSize.insert)
+
+	// if csv file does not exist, generate some random/fake data, and populate it to the CSV file
+	_, err := os.Stat(cfg.CsvFileName)
+	if os.IsNotExist(err) {
+		attributes = generateDataOnce(operations)
+		CreateCSVFile(cfg.CsvFileName, operations, attributes)
+	}
+
+	//read from csv
+	csvReader := reader.NewCSVReader(cfg.CsvFileName)
+	var attributes types.Attributes
+	attributes = csvReader.ReadData()
+
+	dataList := generateData(opSize.insert, attributes)
+
 	var updateCount = 0
 	var deleteCount = 0
 	var insertedDataList []Data
-	//var updatedDataList []Data
+
 	var results []interface{}
 	rand.Seed(time.Now().UnixNano())
 
@@ -69,7 +90,7 @@ func Populate(mclient *mongo.Client, operations int) []interface{} {
 	}
 
 	//insert data for alter table
-	data := generateDataAlterTable(3)
+	data := generateDataAlterTable(3, attributes)
 	for i := 0; i < len(data); i++ {
 		fmt.Println("Alter successfull")
 		insertedData, err := insertData(data[i])
@@ -100,30 +121,66 @@ func calculateOperationSize(totalOperation int) *OperationSize {
 
 	return opSize
 }
-func generateData(operations int) []Data {
+
+func generateDataOnce(n int) types.Attributes {
+	var subjects = []string{"Maths", "Science", "Social Studies", "English"}
+	var positions = []string{"Manager", "Engineer", "Salesman", "Developer"}
+
+	if n > 50 {
+		n = n / 4
+	}
+	for i := 0; i < n; i++ {
+		attributes.FirstNames = append(attributes.FirstNames, gofakeit.FirstName())
+		attributes.LastNames = append(attributes.LastNames, gofakeit.LastName())
+		attributes.Subjects = append(attributes.Subjects, subjects[rand.Intn(len(subjects))])
+		attributes.StreetAddresses = append(attributes.StreetAddresses, gofakeit.Address().Street)
+		attributes.Positions = append(attributes.Positions, positions[rand.Intn(len(positions))])
+		attributes.Zips = append(attributes.Zips, gofakeit.Zip())
+		attributes.PhoneNumbers = append(attributes.PhoneNumbers, gofakeit.Phone())
+		attributes.Ages = append(attributes.Ages, rand.Intn(30)+20)
+		attributes.Workhours = append(attributes.Workhours, rand.Intn(8)+4)
+		attributes.Salaries = append(attributes.Salaries, rand.Float64()*10000)
+	}
+
+	return attributes
+}
+
+func generateData(operations int, attributes types.Attributes) []Data {
 	x := operations / 2
 	var data []Data
+	index := 0
 	for i := 0; i < x; i++ {
 		emp := &Employee{}
-		empData := emp.GetData()
+		empData := emp.GetData(attributes, index)
 		data = append(data, empData)
 		student := &Student{}
-		studentData := student.GetData()
+		studentData := student.GetData(attributes, index)
 		data = append(data, studentData)
+		index++
+		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
+		if index > len(attributes.FirstNames)-2 {
+			index = 0
+		}
 	}
 	shuffle(data)
 	return data
 }
 
-func generateDataAlterTable(operations int) []Data {
+func generateDataAlterTable(operations int, attributes types.Attributes) []Data {
 	var data []Data
+	index := 0
 	for i := 0; i < operations; i++ {
 		emp := &EmployeeA{}
-		empData := emp.GetData()
+		empData := emp.GetData(attributes, index)
 		data = append(data, empData)
 		student := &StudentA{}
-		studentData := student.GetData()
+		studentData := student.GetData(attributes, index)
 		data = append(data, studentData)
+		index++
+		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
+		if index > len(attributes.FirstNames)-2 {
+			index = 0
+		}
 	}
 	shuffle(data)
 	return data
@@ -152,7 +209,6 @@ func isMultipleOfTwoNineortweleve(n int) bool {
 
 func insertData(data Data) (*mongo.InsertOneResult, error) {
 	collection := data.GetCollection()
-	//extract
 	InsertOneResult, err := collection.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
@@ -177,140 +233,4 @@ func deleteData(data Data) (*mongo.DeleteResult, error) {
 		return nil, err
 	}
 	return deleteResult, nil
-}
-
-type Data interface {
-	GetCollection() *mongo.Collection
-	GetData() Data
-	GetUpdateSet() interface{}
-	GetUpdateUnset() interface{}
-	GetUpdate() interface{}
-}
-
-func (s *Student) GetCollection() *mongo.Collection {
-	return client.Database("student").Collection("students")
-}
-
-func (s *StudentA) GetCollection() *mongo.Collection {
-	return client.Database("student").Collection("students")
-}
-
-func (s *Student) GetData() Data {
-	return &Student{
-		Name:    gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:     rand.Intn(10) + 18,
-		Subject: subjects[rand.Intn(len(subjects))],
-	}
-}
-
-func (s *StudentA) GetData() Data {
-	return &StudentA{
-		Name:         gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:          rand.Intn(10) + 18,
-		Subject:      subjects[rand.Intn(len(subjects))],
-		Is_Graduated: gofakeit.Bool(),
-	}
-}
-func (s *StudentA) GetUpdateSet() interface{} {
-	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
-}
-
-func (s *Student) GetUpdateSet() interface{} {
-	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
-}
-
-func (s *StudentA) GetUpdateUnset() interface{} {
-	return bson.M{"$unset": bson.M{"subject": ""}}
-}
-
-func (s *Student) GetUpdateUnset() interface{} {
-	return bson.M{"$unset": bson.M{"subject": ""}}
-}
-
-func (s *StudentA) GetUpdate() interface{} {
-	updateS := gofakeit.Bool()
-	if updateS {
-		return s.GetUpdateSet()
-	} else {
-		return s.GetUpdateUnset()
-	}
-}
-
-func (s *Student) GetUpdate() interface{} {
-	updateS := gofakeit.Bool()
-	if updateS {
-		return s.GetUpdateSet()
-	} else {
-		return s.GetUpdateUnset()
-	}
-}
-
-func (e *Employee) GetCollection() *mongo.Collection {
-	return client.Database("employee").Collection("employees")
-}
-
-func (e *EmployeeA) GetCollection() *mongo.Collection {
-	return client.Database("employee").Collection("employees")
-}
-
-func (e *Employee) GetData() Data {
-	return &Employee{
-		Name:   gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:    rand.Intn(30) + 20,
-		Salary: rand.Float64() * 10000,
-		Phone:  Phone{gofakeit.Phone(), gofakeit.Phone()},
-		Address: []Address{
-			{gofakeit.Zip(), gofakeit.Address().Street},
-			{gofakeit.Zip(), gofakeit.Address().Street},
-		},
-		Position: positions[rand.Intn(len(positions))],
-	}
-}
-
-func (e *EmployeeA) GetData() Data {
-	return &EmployeeA{
-		Name:   gofakeit.FirstName() + " " + gofakeit.LastName(),
-		Age:    rand.Intn(30) + 20,
-		Salary: rand.Float64() * 10000,
-		Phone:  Phone{gofakeit.Phone(), gofakeit.Phone()},
-		Address: []Address{
-			{gofakeit.Zip(), gofakeit.Address().Street},
-			{gofakeit.Zip(), gofakeit.Address().Street},
-		},
-		Position:  positions[rand.Intn(len(positions))],
-		WorkHours: rand.Intn(8) + 4,
-	}
-}
-
-func (e *EmployeeA) GetUpdateSet() interface{} {
-	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
-}
-
-func (e *Employee) GetUpdateSet() interface{} {
-	return bson.M{"$set": bson.M{"age": rand.Intn(10) + 18}}
-}
-func (e *EmployeeA) GetUpdateUnset() interface{} {
-	return bson.M{"$unset": bson.M{"position": ""}}
-}
-
-func (e *Employee) GetUpdateUnset() interface{} {
-	return bson.M{"$unset": bson.M{"position": ""}}
-}
-
-func (e *EmployeeA) GetUpdate() interface{} {
-	updateE := gofakeit.Bool()
-	if updateE {
-		return e.GetUpdateSet()
-	} else {
-		return e.GetUpdateUnset()
-	}
-}
-
-func (e *Employee) GetUpdate() interface{} {
-	updateE := gofakeit.Bool()
-	if updateE {
-		return e.GetUpdateSet()
-	} else {
-		return e.GetUpdateUnset()
-	}
 }

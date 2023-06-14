@@ -3,6 +3,7 @@ package main
 import (
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/domain"
+	"mongo-oplog-populator/writer"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,15 +27,15 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		cfg := config.Load()
 		//get Client for mongo
-		client := config.GetClient()
+		client := writer.GetClient(cfg)
+		//Disconnect Client (pass ctx later for disconnecting mongo client)
+		defer writer.DisconnectClient(client)
 
 		populator := createPopulator(bulkInsert, streamInsert)
 
-		populator.PopulateData(client)
-
-		//Disconnect Client
-		config.DisconnectClient(client)
+		populator.PopulateData(client, cfg)
 	},
 }
 

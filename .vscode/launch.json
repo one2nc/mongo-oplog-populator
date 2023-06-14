@@ -10,10 +10,10 @@
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/.",
+            "program": "${workspaceFolder}/cmd/mongo-populator/.",
             "args": [
                 "-b",
-                "10",
+                "200",
             ]
         },
     ]
