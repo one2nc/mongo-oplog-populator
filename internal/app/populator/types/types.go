@@ -1,6 +1,6 @@
 package types
 
-//TODO: remove this later
+//TODO: give better name
 type Attributes struct {
 	FirstNames, LastNames, Subjects, StreetAddresses, Positions, Zips, PhoneNumbers []string
 	Ages, Workhours                                                                 []int

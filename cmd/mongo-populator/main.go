@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//TODO: refactor flags add ./mongopop 1000 for bulk , ./mongopop -s 100 for stream
 func init() {
 	rootCmd.Flags().IntVarP(&bulkInsert, "bulk", "b", 0, "Bulk Insert")
 	rootCmd.Flags().IntVarP(&streamInsert, "stream", "s", 0, "Stream Insert")
@@ -30,6 +31,8 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
+		//TODO: Write to csv here
+
 		ctx, cancel := context.WithCancel(context.Background())
 		// Handle interrupt signal
 		handleInterruptSignal(cancel)
@@ -43,8 +46,13 @@ var rootCmd = &cobra.Command{
 		// if csv file does not exist, generate some random/fake data, and populate it to the CSV file
 		noOfOperations := getNumberOfOperations(bulkInsert, streamInsert)
 		csvWriter := writer.NewCSVWriter(cfg.CsvFileName, noOfOperations)
+		//TODO: generate 1000 data
+		//TODO: Generate data and pass to write
+		//TDOD: generator will be an interface to genertae data
 		csvWriter.WriteData()
 
+		//TODO : use reader here
+		//TODO : use only 1 flag here
 		populator := createPopulator(bulkInsert, streamInsert)
 		populator.PopulateData(client, cfg, ctx)
 	},

@@ -32,7 +32,7 @@ func (csvw *CSVWriter) WriteData() {
 		defer file.Close()
 
 		writer := csv.NewWriter(file)
-		// Add threshold for flush
+		// TODO:Add threshold for flush
 		defer writer.Flush()
 
 		header := []string{
@@ -50,6 +50,8 @@ func (csvw *CSVWriter) WriteData() {
 		}
 
 		for i := 0; i < csvw.Operations; i++ {
+			//TODO: 
+			//TODO: generate randomInt once and modify it
 			row := []string{
 				gofakeit.FirstName(),
 				gofakeit.LastName(),

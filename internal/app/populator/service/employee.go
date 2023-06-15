@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+//TODO: move this to Data(example) package
+//TODO: move generated csv to that folder
 func (e *Employee) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
@@ -72,6 +74,8 @@ func (e *EmployeeA) GetUpdateUnset() interface{} {
 }
 
 func (e *EmployeeA) GetUpdate() interface{} {
+	//TODO : don't use gofakeit here
+	//TODO: use your custom gofakeit(example) package/interface
 	updateE := gofakeit.Bool()
 	if updateE {
 		return e.GetUpdateSet()

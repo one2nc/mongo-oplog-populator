@@ -24,6 +24,7 @@ func Populate(mclient *mongo.Client, operations int, cfg config.Config, ctx cont
 
 	opSize := calculateOperationSize(operations)
 
+	//TODO: move from here
 	//read from csv
 	csvReader := reader.NewCSVReader(cfg.CsvFileName)
 	attributes := csvReader.ReadData()
