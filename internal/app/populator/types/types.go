@@ -1,7 +1,7 @@
 package types
 
-//TODO: give better name
-type Attributes struct {
+// TODO-DONE: give better name
+type PersonnelInfo struct {
 	FirstNames, LastNames, Subjects, StreetAddresses, Positions, Zips, PhoneNumbers []string
 	Ages, Workhours                                                                 []int
 	Salaries                                                                        []float64

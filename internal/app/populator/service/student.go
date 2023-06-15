@@ -13,7 +13,7 @@ func (s *Student) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *Student) GetData(attributes types.Attributes, index int) Data {
+func (s *Student) GetData(attributes types.PersonnelInfo, index int) Data {
 	return &Student{
 		Name:    attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:     attributes.Ages[index],
@@ -42,7 +42,7 @@ func (s *StudentA) GetCollection() *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *StudentA) GetData(attributes types.Attributes, index int) Data {
+func (s *StudentA) GetData(attributes types.PersonnelInfo, index int) Data {
 	return &StudentA{
 		Name:         attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:          attributes.Ages[index],

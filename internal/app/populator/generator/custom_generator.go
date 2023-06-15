@@ -1,14 +1,17 @@
 package generator
 
+import "mongo-oplog-populator/internal/app/populator/types"
+
 type CustomGenerator interface {
-	generateFirstName() string
-	generateLastName() string
-	generateSubjects() []string
-	generateStreetAddress() string
-	generatePositions() []string
-	generateZip() string
-	generatePhone() string
-	generateAge() int
-	generateWorkHours() int
-	generateSalary() float64
+	GenerateFirstName() string
+	GenerateLastName() string
+	GenerateSubject(i int) string
+	GenerateStreetAddress() string
+	GeneratePosition(i int) string
+	GenerateZip() string
+	GeneratePhone() string
+	GenerateAge(i int) int
+	GenerateWorkHours(i int) int
+	GenerateSalary(i int) float64
+	GenerateFakeData() types.PersonnelInfo
 }

@@ -128,7 +128,7 @@ func calculateOperationSize(totalOperation int) *OperationSize {
 	return opSize
 }
 
-func generateData(operations int, attributes types.Attributes) []Data {
+func generateData(operations int, attributes types.PersonnelInfo) []Data {
 	x := operations / 2
 	var data []Data
 	index := 0
@@ -149,7 +149,7 @@ func generateData(operations int, attributes types.Attributes) []Data {
 	return data
 }
 
-func generateDataAlterTable(operations int, attributes types.Attributes) []Data {
+func generateDataAlterTable(operations int, attributes types.PersonnelInfo) []Data {
 	var data []Data
 	index := 0
 	for i := 0; i < operations; i++ {

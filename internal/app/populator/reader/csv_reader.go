@@ -19,8 +19,8 @@ func NewCSVReader(filepath string) Reader {
 	}
 }
 
-func (csvr *CSVReader) ReadData() types.Attributes {
-	var attributes types.Attributes
+func (csvr *CSVReader) ReadData() types.PersonnelInfo {
+	var attributes types.PersonnelInfo
 	file, err := os.Open(csvr.FilePath)
 	if err != nil {
 		log.Fatal("Could not open file:", err)

@@ -8,7 +8,7 @@ import (
 
 type Data interface {
 	GetCollection() *mongo.Collection
-	GetData(attributes types.Attributes, index int) Data
+	GetData(attributes types.PersonnelInfo, index int) Data
 	GetUpdateSet() interface{}
 	GetUpdateUnset() interface{}
 	GetUpdate() interface{}

@@ -9,13 +9,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//TODO: move this to Data(example) package
-//TODO: move generated csv to that folder
+// TODO: move this to Data(example) package
+// TODO: move generated csv to that folder
 func (e *Employee) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
-func (e *Employee) GetData(attributes types.Attributes, index int) Data {
+func (e *Employee) GetData(attributes types.PersonnelInfo, index int) Data {
 	return &Employee{
 		Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:    attributes.Ages[index],
@@ -50,7 +50,7 @@ func (e *EmployeeA) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
-func (e *EmployeeA) GetData(attributes types.Attributes, index int) Data {
+func (e *EmployeeA) GetData(attributes types.PersonnelInfo, index int) Data {
 	return &EmployeeA{
 		Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:    attributes.Ages[index],

@@ -1,5 +1,7 @@
 package writer
 
+import "mongo-oplog-populator/internal/app/populator/types"
+
 type Writer interface {
-	WriteData()
+	WriteData(personnelInfo types.PersonnelInfo)
 }
