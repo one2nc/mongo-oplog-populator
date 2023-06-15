@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/service"
@@ -19,7 +20,7 @@ func NewStreamInsert(numberOfOperations int) Populator {
 	return &StreamInsert{NumberOfOperations: numberOfOperations}
 }
 
-func (si *StreamInsert) PopulateData(client *mongo.Client, cfg config.Config) {
+func (si *StreamInsert) PopulateData(client *mongo.Client, cfg config.Config, ctx context.Context) {
 	ticker := time.NewTicker(time.Second * 1)
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -29,11 +30,13 @@ func (si *StreamInsert) PopulateData(client *mongo.Client, cfg config.Config) {
 		select {
 		case <-ticker.C:
 			println("Second : ", a)
-			go service.Populate(client, si.NumberOfOperations, cfg)
+			go service.Populate(client, si.NumberOfOperations, cfg, ctx)
 			a++
 		case <-interrupt:
 			fmt.Println("Interrupt signal received, stopping program...")
 			ticker.Stop()
+			return
+		case <-ctx.Done():
 			return
 		}
 	}

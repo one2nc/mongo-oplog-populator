@@ -9,10 +9,8 @@ import (
 	"mongo-oplog-populator/internal/app/populator/reader"
 	"mongo-oplog-populator/internal/app/populator/types"
 
-	"os"
 	"time"
 
-	"github.com/brianvoe/gofakeit"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,24 +19,14 @@ var client *mongo.Client
 
 var ctx = context.Background()
 
-var attributes types.Attributes
-
-func Populate(mclient *mongo.Client, operations int, cfg config.Config) []interface{} {
+func Populate(mclient *mongo.Client, operations int, cfg config.Config, ctx context.Context) []interface{} {
 	client = mclient
 
 	opSize := calculateOperationSize(operations)
 
-	// if csv file does not exist, generate some random/fake data, and populate it to the CSV file
-	_, err := os.Stat(cfg.CsvFileName)
-	if os.IsNotExist(err) {
-		attributes = generateDataOnce(operations)
-		CreateCSVFile(cfg.CsvFileName, operations, attributes)
-	}
-
 	//read from csv
 	csvReader := reader.NewCSVReader(cfg.CsvFileName)
-	var attributes types.Attributes
-	attributes = csvReader.ReadData()
+	attributes := csvReader.ReadData()
 
 	dataList := generateData(opSize.insert, attributes)
 
@@ -49,7 +37,16 @@ func Populate(mclient *mongo.Client, operations int, cfg config.Config) []interf
 	var results []interface{}
 	rand.Seed(time.Now().UnixNano())
 
+	//TODO : refactor this part of code
+populateLoop:
 	for i := 0; i < len(dataList); i++ {
+		select {
+		case <-ctx.Done():
+			// The context is done, stop reading Oplogs
+			break populateLoop
+		default:
+			// Context is still active, continue reading Oplogs
+		}
 		insertedData, err := insertData(dataList[i])
 		if err != nil {
 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
@@ -91,7 +88,15 @@ func Populate(mclient *mongo.Client, operations int, cfg config.Config) []interf
 
 	//insert data for alter table
 	data := generateDataAlterTable(3, attributes)
+alterLoop:
 	for i := 0; i < len(data); i++ {
+		select {
+		case <-ctx.Done():
+			// The context is done, stop reading Oplogs
+			break alterLoop
+		default:
+			// Context is still active, continue reading Oplogs
+		}
 		fmt.Println("Alter successfull")
 		insertedData, err := insertData(data[i])
 		if err != nil {
@@ -120,29 +125,6 @@ func calculateOperationSize(totalOperation int) *OperationSize {
 	}
 
 	return opSize
-}
-
-func generateDataOnce(n int) types.Attributes {
-	var subjects = []string{"Maths", "Science", "Social Studies", "English"}
-	var positions = []string{"Manager", "Engineer", "Salesman", "Developer"}
-
-	if n > 50 {
-		n = n / 4
-	}
-	for i := 0; i < n; i++ {
-		attributes.FirstNames = append(attributes.FirstNames, gofakeit.FirstName())
-		attributes.LastNames = append(attributes.LastNames, gofakeit.LastName())
-		attributes.Subjects = append(attributes.Subjects, subjects[rand.Intn(len(subjects))])
-		attributes.StreetAddresses = append(attributes.StreetAddresses, gofakeit.Address().Street)
-		attributes.Positions = append(attributes.Positions, positions[rand.Intn(len(positions))])
-		attributes.Zips = append(attributes.Zips, gofakeit.Zip())
-		attributes.PhoneNumbers = append(attributes.PhoneNumbers, gofakeit.Phone())
-		attributes.Ages = append(attributes.Ages, rand.Intn(30)+20)
-		attributes.Workhours = append(attributes.Workhours, rand.Intn(8)+4)
-		attributes.Salaries = append(attributes.Salaries, rand.Float64()*10000)
-	}
-
-	return attributes
 }
 
 func generateData(operations int, attributes types.Attributes) []Data {
