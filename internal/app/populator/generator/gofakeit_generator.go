@@ -6,12 +6,13 @@ import (
 	"github.com/brianvoe/gofakeit"
 )
 
+// TODO: Decide from where to take this number, .env?
 var noOfFakeDataOperations int = 1000
 
 type GoFakeItGenerator struct {
 }
 
-func (g *GoFakeItGenerator) NewGoFakeItGenerator() CustomGenerator {
+func (g *GoFakeItGenerator) NewGoFakeItGenerator() CustomDataGenerator {
 	return &GoFakeItGenerator{}
 }
 
@@ -60,7 +61,7 @@ func (*GoFakeItGenerator) GenerateSubject(i int) string {
 
 // generateWorkHours implements CustomGenerator
 func (*GoFakeItGenerator) GenerateWorkHours(i int) int {
-	return (i + i) % 13
+	return (i + 1) % 13
 }
 
 // generateZip implements CustomGenerator

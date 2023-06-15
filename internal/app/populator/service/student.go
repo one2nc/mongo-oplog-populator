@@ -30,7 +30,7 @@ func (s *Student) GetUpdateUnset() interface{} {
 }
 
 func (s *Student) GetUpdate() interface{} {
-	updateS := gofakeit.Bool()
+	updateS := getBoolean()
 	if updateS {
 		return s.GetUpdateSet()
 	} else {
@@ -59,10 +59,19 @@ func (s *StudentA) GetUpdateUnset() interface{} {
 }
 
 func (s *StudentA) GetUpdate() interface{} {
-	updateS := gofakeit.Bool()
+	updateS := getBoolean()
 	if updateS {
 		return s.GetUpdateSet()
 	} else {
 		return s.GetUpdateUnset()
 	}
+}
+
+// TODO: Decide the place of this function
+func getBoolean() bool {
+	ri := rand.Intn(20)
+	if (5*ri)%3 == 0 {
+		return false
+	}
+	return true
 }

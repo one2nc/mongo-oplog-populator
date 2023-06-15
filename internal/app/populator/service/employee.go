@@ -4,13 +4,13 @@ import (
 	"math/rand"
 	"mongo-oplog-populator/internal/app/populator/types"
 
-	"github.com/brianvoe/gofakeit"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// TODO: move this to Data(example) package
-// TODO: move generated csv to that folder
+// TODO: move this to Generator(example) package
+
+// TODO-DONE: move generated csv to that folder
 func (e *Employee) GetCollection() *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
@@ -38,7 +38,7 @@ func (e *Employee) GetUpdateUnset() interface{} {
 }
 
 func (e *Employee) GetUpdate() interface{} {
-	updateE := gofakeit.Bool()
+	updateE := getBoolean()
 	if updateE {
 		return e.GetUpdateSet()
 	} else {
@@ -74,9 +74,9 @@ func (e *EmployeeA) GetUpdateUnset() interface{} {
 }
 
 func (e *EmployeeA) GetUpdate() interface{} {
-	//TODO : don't use gofakeit here
-	//TODO: use your custom gofakeit(example) package/interface
-	updateE := gofakeit.Bool()
+	//TODO-DONE : don't use gofakeit here
+	//TODO-DONE: use your custom gofakeit(example) package/interface
+	updateE := getBoolean()
 	if updateE {
 		return e.GetUpdateSet()
 	} else {

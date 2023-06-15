@@ -2,7 +2,8 @@ package generator
 
 import "mongo-oplog-populator/internal/app/populator/types"
 
-type CustomGenerator interface {
+// TODO-DONE: generator will be an interface to generate data
+type CustomDataGenerator interface {
 	GenerateFirstName() string
 	GenerateLastName() string
 	GenerateSubject(i int) string

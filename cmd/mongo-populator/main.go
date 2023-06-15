@@ -6,6 +6,7 @@ import (
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/domain"
 	"mongo-oplog-populator/internal/app/populator/generator"
+	"mongo-oplog-populator/internal/app/populator/reader"
 	"mongo-oplog-populator/writer"
 	"os"
 	"os/signal"
@@ -20,8 +21,9 @@ var (
 	numRecords   int
 )
 
-// TODO: refactor flags add ./mongopop 1000 for bulk , ./mongopop -s 100 for stream
+// TODO-DONE: refactor flags add ./mongopop 1000 for bulk , ./mongopop -s 100 for stream
 func init() {
+	//TODO-DONE : use only 1 flag here
 	rootCmd.Flags().IntVarP(&streamInsert, "stream", "s", 0, "Stream Insert")
 }
 
@@ -44,35 +46,38 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		//TODO-DONE: Write to csv here
-		//TODO-DONE: Generate data and pass to write
 		cfg := config.Load()
 
+		//TODO-DONE: Generate data and pass to write
 		var customGenerator generator.GoFakeItGenerator
 		gofakeitGenerator := customGenerator.NewGoFakeItGenerator()
 		personnelInfo := gofakeitGenerator.GenerateFakeData()
 
-		csvWriter := writer.NewCSVWriter(cfg.CsvFileName)
-		csvWriter.WriteData(personnelInfo)
+		//TODO-DONE: Write to csv here
+		//checking if csv file already exists, if not, ythen create a writer
+		_, err := os.Stat(cfg.CsvFileName)
+		if os.IsNotExist(err) {
+			csvWriter := writer.NewCSVWriter(cfg.CsvFileName)
+			csvWriter.WriteData(personnelInfo)
+		}
+
+		//TODO-DONE: use reader here
+		csvReader := reader.NewCSVReader(cfg.CsvFileName)
+		personnelInfo = csvReader.ReadData()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		// Handle interrupt signal
 		handleInterruptSignal(cancel)
 
 		//get Client for mongo
-		client := writer.GetClient(cfg, ctx)
+		client := writer.GetClient(ctx, cfg)
 		//Disconnect Client (pass ctx later for disconnecting mongo client)
-		defer writer.DisconnectClient(client, ctx)
+		defer writer.DisconnectClient(ctx, client)
 
 		// if csv file does not exist, generate some random/fake data, and populate it to the CSV file
 
-		//TODO: generator will be an interface to genertae data
-
-		//TODO : use reader here
-		//TODO : use only 1 flag here
-
 		populator := createPopulator(numRecords, streamInsert)
-		populator.PopulateData(client, cfg, ctx)
+		populator.PopulateData(ctx, client, cfg, personnelInfo)
 	},
 }
 

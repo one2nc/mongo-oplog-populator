@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func GetClient(cfg config.Config,ctx context.Context) *mongo.Client {
+func GetClient(ctx context.Context, cfg config.Config) *mongo.Client {
 	clientOptions := options.Client().ApplyURI(cfg.MongoUri).SetDirect(true)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
@@ -19,6 +19,6 @@ func GetClient(cfg config.Config,ctx context.Context) *mongo.Client {
 	return client
 }
 
-func DisconnectClient(client *mongo.Client,ctx context.Context) {
+func DisconnectClient(ctx context.Context, client *mongo.Client) {
 	client.Disconnect(ctx)
 }

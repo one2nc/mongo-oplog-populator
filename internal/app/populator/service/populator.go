@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"mongo-oplog-populator/config"
-	"mongo-oplog-populator/internal/app/populator/reader"
 	"mongo-oplog-populator/internal/app/populator/types"
 
 	"time"
@@ -19,17 +18,14 @@ var client *mongo.Client
 
 var ctx = context.Background()
 
-func Populate(mclient *mongo.Client, operations int, cfg config.Config, ctx context.Context) []interface{} {
+func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, personnelInfo types.PersonnelInfo) []interface{} {
 	client = mclient
 
 	opSize := calculateOperationSize(operations)
 
-	//TODO: move from here
-	//read from csv
-	csvReader := reader.NewCSVReader(cfg.CsvFileName)
-	attributes := csvReader.ReadData()
+	//TODO-DONE: move reader from here
 
-	dataList := generateData(opSize.insert, attributes)
+	dataList := generateData(opSize.insert, personnelInfo)
 
 	var updateCount = 0
 	var deleteCount = 0
@@ -64,6 +60,7 @@ populateLoop:
 					continue
 				}
 				updateCount++
+				println("updating data")
 				results = append(results, updateResult)
 			}
 		}
@@ -87,7 +84,7 @@ populateLoop:
 	}
 
 	//insert data for alter table
-	data := generateDataAlterTable(3, attributes)
+	data := generateDataAlterTable(3, personnelInfo)
 alterLoop:
 	for i := 0; i < len(data); i++ {
 		select {
