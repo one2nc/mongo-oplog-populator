@@ -23,8 +23,8 @@ func init() {
 
 var rootCmd = &cobra.Command{
 	Use:   "mongopop",
-	Short: "Populate mongo-oplogs",
-	Long:  `A simple CLI application to demonstrate the usage of Cobra.`,
+	Short: "Data Population in MongoDB",
+	Long:  "This application facilitates data population in a MongoDB database by providing functionalities to perform insert, update, and delete operations. The application allows you to efficiently manage the data in your MongoDB database, resulting in optimized operations and improved performance.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !cmd.Flags().HasFlags() {
 			cmd.Usage()
