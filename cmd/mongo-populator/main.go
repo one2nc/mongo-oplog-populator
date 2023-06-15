@@ -2,19 +2,23 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/domain"
 	"mongo-oplog-populator/internal/app/populator/generator"
 	"mongo-oplog-populator/writer"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/spf13/cobra"
 )
 
-var bulkInsert int
-var streamInsert int
+var (
+	streamInsert int
+	numRecords   int
+)
 
 // TODO: refactor flags add ./mongopop 1000 for bulk , ./mongopop -s 100 for stream
 func init() {
@@ -29,6 +33,15 @@ var rootCmd = &cobra.Command{
 		if !cmd.Flags().HasFlags() {
 			cmd.Usage()
 			return
+		}
+
+		if streamInsert == 0 {
+			var err error
+			numRecords, err = strconv.Atoi(args[0])
+			if err != nil {
+				fmt.Println("Invalid argument. Please provide a valid integer.")
+				os.Exit(1)
+			}
 		}
 
 		//TODO-DONE: Write to csv here
@@ -57,7 +70,8 @@ var rootCmd = &cobra.Command{
 
 		//TODO : use reader here
 		//TODO : use only 1 flag here
-		populator := createPopulator(bulkInsert, streamInsert)
+
+		populator := createPopulator(numRecords, streamInsert)
 		populator.PopulateData(client, cfg, ctx)
 	},
 }
@@ -76,10 +90,10 @@ func handleInterruptSignal(cancel context.CancelFunc) {
 
 func createPopulator(bulkInsert, streamInsert int) domain.Populator {
 	var populator domain.Populator
-	if bulkInsert > 0 {
-		populator = domain.NewBulkInsert(bulkInsert)
+	if streamInsert > 0 {
+		populator = domain.NewStreamInsert(bulkInsert)
 	} else {
-		populator = domain.NewStreamInsert(streamInsert)
+		populator = domain.NewBulkInsert(streamInsert)
 	}
 	return populator
 }
