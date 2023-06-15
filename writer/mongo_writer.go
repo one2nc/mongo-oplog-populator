@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// TODO:  Move this to other package(decide the name)
 func GetClient(ctx context.Context, cfg config.Config) *mongo.Client {
 	clientOptions := options.Client().ApplyURI(cfg.MongoUri).SetDirect(true)
 	client, err := mongo.Connect(ctx, clientOptions)
