@@ -2,6 +2,7 @@ package writer
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"mongo-oplog-populator/internal/app/populator/types"
 	"os"
@@ -26,9 +27,7 @@ func (csvw *CSVWriter) WriteData(personnelInfo types.PersonnelInfo) {
 		defer file.Close()
 
 		writer := csv.NewWriter(file)
-		// TODO:Add threshold for flush
-		defer writer.Flush()
-
+		// TODO-DONE:Add threshold for flush
 		header := []string{
 			"First Name", "Last Name", "Subject", "Street Address", "Position",
 			"ZIP", "Phone Number", "Age", "Work Hours", "Salary",
@@ -40,30 +39,30 @@ func (csvw *CSVWriter) WriteData(personnelInfo types.PersonnelInfo) {
 		}
 
 		//TODO-DONE: generate randomInt once and modify it
-		//TODO: Modify this Code
+		//TODO-DONE: Modify this Code
 
-		// for i := 0; i < csvw.Operations; i++ {
-		// 	//TODO:
-		//
-		// 	row := []string{
-		// 		gofakeit.FirstName(),
-		// 		gofakeit.LastName(),
-		// 		subjects[rand.Intn(len(subjects))],
-		// 		gofakeit.Address().Street,
-		// 		positions[rand.Intn(len(positions))],
-		// 		gofakeit.Zip(),
-		// 		gofakeit.Phone(),
-		// 		fmt.Sprintf("%d", rand.Intn(30)+20),
-		// 		fmt.Sprintf("%d", rand.Intn(8)+4),
-		// 		fmt.Sprintf("%.2f", rand.Float64()*10000),
-		// 	}
-
-		// 	err = writer.Write(row)
-		// 	if err != nil {
-		// 		log.Fatal("Error writing row to CSV:", err)
-		// 	}
-		// }
-
+		for i := 0; i < len(personnelInfo.FirstNames); i++ {
+			row := []string{
+				personnelInfo.FirstNames[i],
+				personnelInfo.LastNames[i],
+				personnelInfo.Subjects[i],
+				personnelInfo.StreetAddresses[i],
+				personnelInfo.Positions[i],
+				personnelInfo.Zips[i],
+				personnelInfo.PhoneNumbers[i],
+				fmt.Sprintf("%d", personnelInfo.Ages[i]),
+				fmt.Sprintf("%d", personnelInfo.Workhours[i]),
+				fmt.Sprintf("%f", personnelInfo.Salaries[i]),
+			}
+			err = writer.Write(row)
+			if err != nil {
+				log.Fatal("Error writing row to CSV:", err)
+			}
+			if i%10 == 0 {
+				writer.Flush()
+			}
+		}
+		writer.Flush()
 		log.Println("CSV file created successfully.")
 	}
 }

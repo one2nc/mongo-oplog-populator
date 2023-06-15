@@ -65,7 +65,6 @@ populateLoop:
 				}
 				updateCount++
 				results = append(results, updateResult)
-				println("updating Data")
 			}
 		}
 

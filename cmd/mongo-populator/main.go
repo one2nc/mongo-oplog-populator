@@ -45,7 +45,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		//TODO-DONE: Write to csv here
-		//TODO: Generate data and pass to write
+		//TODO-DONE: Generate data and pass to write
 		cfg := config.Load()
 
 		var customGenerator generator.GoFakeItGenerator
@@ -91,9 +91,9 @@ func handleInterruptSignal(cancel context.CancelFunc) {
 func createPopulator(bulkInsert, streamInsert int) domain.Populator {
 	var populator domain.Populator
 	if streamInsert > 0 {
-		populator = domain.NewStreamInsert(bulkInsert)
+		populator = domain.NewStreamInsert(streamInsert)
 	} else {
-		populator = domain.NewBulkInsert(streamInsert)
+		populator = domain.NewBulkInsert(bulkInsert)
 	}
 	return populator
 }
