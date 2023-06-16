@@ -7,6 +7,7 @@ import (
 	"mongo-oplog-populator/internal/app/populator/domain"
 	"mongo-oplog-populator/internal/app/populator/generator"
 	"mongo-oplog-populator/internal/app/populator/reader"
+	"mongo-oplog-populator/internal/app/populator/service"
 	"mongo-oplog-populator/writer"
 	"os"
 	"os/signal"
@@ -71,13 +72,19 @@ var rootCmd = &cobra.Command{
 
 		//get Client for mongo
 		client := writer.GetClient(ctx, cfg)
+
 		//Disconnect Client (pass ctx later for disconnecting mongo client)
 		defer writer.DisconnectClient(ctx, client)
 
-		// if csv file does not exist, generate some random/fake data, and populate it to the CSV file
+		//TODO: remove hardcoded number from here
+		opSize := service.CalculateOperationSize(10000)
+
+		//TODO-DONE: move reader from here
+
+		dataList := service.GenerateData(opSize.Insert, personnelInfo)
 
 		populator := createPopulator(numRecords, streamInsert)
-		populator.PopulateData(ctx, client, cfg, personnelInfo)
+		populator.PopulateData(ctx, client, cfg, dataList, opSize)
 	},
 }
 

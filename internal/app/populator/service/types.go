@@ -42,5 +42,5 @@ type Address struct {
 	Line1 string
 }
 type OperationSize struct {
-	insert, update, delete int
+	Insert, Update, Delete int
 }

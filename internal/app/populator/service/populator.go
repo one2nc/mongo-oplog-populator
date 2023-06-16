@@ -18,22 +18,21 @@ var client *mongo.Client
 
 var ctx = context.Background()
 
-//TODO : generateData should be called once in main and passed here
-func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, personnelInfo types.PersonnelInfo) []interface{} {
+// TODO : generateData should be called once in main and passed here
+func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, dataList []Data, opSize *OperationSize) {
 	client = mclient
 
 	//TODO : calculate once  and pass to populate func
-	opSize := calculateOperationSize(operations)
+	//opSize := CalculateOperationSize(operations)
 
 	//TODO-DONE: move reader from here
 
-	dataList := generateData(opSize.insert, personnelInfo)
+	//dataList := GenerateData(opSize.insert, personnelInfo)
 
 	var updateCount = 0
 	var deleteCount = 0
 	var insertedDataList []Data
 
-	var results []interface{}
 	rand.Seed(time.Now().UnixNano())
 
 	//TODO : refactor this part of code
@@ -46,7 +45,7 @@ populateLoop:
 		default:
 			// Context is still active, continue reading Oplogs
 		}
-		insertedData, err := insertData(dataList[i])
+		_, err := insertData(dataList[i])
 		if err != nil {
 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
 			continue
@@ -55,59 +54,55 @@ populateLoop:
 		println("inserting Data")
 		//update
 		if isMultipleOfSevenEightOrEleven(i) {
-			if updateCount < opSize.update {
-				updateResult, err := updateData(insertedDataList[i])
+			if updateCount < opSize.Update {
+				_, err := updateData(insertedDataList[i])
 				if err != nil {
 					fmt.Printf("Failed to update data at index %d: %s\n", i, err.Error())
 					continue
 				}
 				updateCount++
 				println("updating data")
-				results = append(results, updateResult)
 			}
 		}
 
 		//delete
 		if isMultipleOfTwoNineortweleve(i) {
-			if deleteCount < opSize.delete {
+			if deleteCount < opSize.Delete {
 				indx := rand.Intn(i)
-				deleteResult, err := deleteData(insertedDataList[indx])
+				_, err := deleteData(insertedDataList[indx])
 				if err != nil {
 					fmt.Printf("Failed to delete data at index %d: %s\n", i, err.Error())
 					continue
 				}
 				insertedDataList = append(insertedDataList[:indx], insertedDataList[indx:]...)
 				deleteCount++
-				results = append(results, deleteResult)
 				println("Deleting Data")
 			}
 		}
-		results = append(results, insertedData)
 	}
 
 	//insert data for alter table
-	data := generateDataAlterTable(3, personnelInfo)
-alterLoop:
-	for i := 0; i < len(data); i++ {
-		select {
-		case <-ctx.Done():
-			// The context is done, stop reading Oplogs
-			break alterLoop
-		default:
-			// Context is still active, continue reading Oplogs
-		}
-		fmt.Println("Alter successfull")
-		insertedData, err := insertData(data[i])
-		if err != nil {
-			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
-			continue
-		}
-		results = append(results, insertedData)
-	}
-	return results
+	// 	data := generateDataAlterTable(3, personnelInfo)
+	// alterLoop:
+	// 	for i := 0; i < len(data); i++ {
+	// 		select {
+	// 		case <-ctx.Done():
+	// 			// The context is done, stop reading Oplogs
+	// 			break alterLoop
+	// 		default:
+	// 			// Context is still active, continue reading Oplogs
+	// 		}
+	// 		fmt.Println("Alter successfull")
+	// 		insertedData, err := insertData(data[i])
+	// 		if err != nil {
+	// 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
+	// 			continue
+	// 		}
+	// 		results = append(results, insertedData)
+	// 	}
 }
 
-func calculateOperationSize(totalOperation int) *OperationSize {
+func CalculateOperationSize(totalOperation int) *OperationSize {
 	i := (85 * totalOperation) / 100
 	i = int(math.Max(float64(i), 1))
 
@@ -118,15 +113,15 @@ func calculateOperationSize(totalOperation int) *OperationSize {
 	d = int(math.Max(float64(d), 1))
 
 	opSize := &OperationSize{
-		insert: i,
-		update: u,
-		delete: d,
+		Insert: i,
+		Update: u,
+		Delete: d,
 	}
 
 	return opSize
 }
 
-func generateData(operations int, attributes types.PersonnelInfo) []Data {
+func GenerateData(operations int, attributes types.PersonnelInfo) []Data {
 	x := operations / 2
 	var data []Data
 	index := 0
@@ -143,6 +138,8 @@ func generateData(operations int, attributes types.PersonnelInfo) []Data {
 			index = 0
 		}
 	}
+	dataAlterTable := generateDataAlterTable(3, attributes)
+	data = append(data, dataAlterTable...)
 	shuffle(data)
 	return data
 }
@@ -163,7 +160,6 @@ func generateDataAlterTable(operations int, attributes types.PersonnelInfo) []Da
 			index = 0
 		}
 	}
-	shuffle(data)
 	return data
 }
 
