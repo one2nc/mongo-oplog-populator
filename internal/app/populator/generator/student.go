@@ -1,8 +1,7 @@
-package service
+package generator
 
 import (
 	"math/rand"
-	"mongo-oplog-populator/internal/app/populator/types"
 
 	"github.com/brianvoe/gofakeit"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,7 +12,7 @@ func (s *Student) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *Student) GetData(attributes types.PersonnelInfo, index int) Data {
+func (s *Student) GetData(attributes PersonnelInfo, index int) Data {
 	return &Student{
 		Name:    attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:     attributes.Ages[index],
@@ -42,7 +41,7 @@ func (s *StudentA) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
-func (s *StudentA) GetData(attributes types.PersonnelInfo, index int) Data {
+func (s *StudentA) GetData(attributes PersonnelInfo, index int) Data {
 	return &StudentA{
 		Name:         attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:          attributes.Ages[index],

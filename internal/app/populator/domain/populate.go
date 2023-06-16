@@ -2,12 +2,11 @@ package domain
 
 import (
 	"context"
-	"mongo-oplog-populator/config"
-	"mongo-oplog-populator/internal/app/populator/service"
+	"mongo-oplog-populator/internal/app/populator/generator"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Populator interface {
-	PopulateData(ctx context.Context, client *mongo.Client, cfg config.Config, dataList []service.Data, opSize *service.OperationSize)
+	PopulateData(ctx context.Context, client *mongo.Client, dataList []generator.Data, opSize *generator.OperationSize)
 }

@@ -4,7 +4,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"mongo-oplog-populator/internal/app/populator/types"
+	"mongo-oplog-populator/internal/app/populator/generator"
+
 	"os"
 )
 
@@ -16,7 +17,7 @@ func NewCSVWriter(filepath string) Writer {
 	return &CSVWriter{FilePath: filepath}
 }
 
-func (csvw *CSVWriter) WriteData(personnelInfo types.PersonnelInfo) {
+func (csvw *CSVWriter) WriteData(personnelInfo generator.PersonnelInfo) {
 	file, err := os.Create(csvw.FilePath)
 	if err != nil {
 		log.Fatal("Could not create file:", err)

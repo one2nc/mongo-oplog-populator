@@ -1,8 +1,6 @@
 package generator
 
 import (
-	"mongo-oplog-populator/internal/app/populator/types"
-
 	"github.com/brianvoe/gofakeit"
 )
 
@@ -70,8 +68,8 @@ func (*GoFakeItGenerator) GenerateZip() string {
 }
 
 // TODO-DONE: generate 1000 data
-func (g *GoFakeItGenerator) GenerateFakeData() types.PersonnelInfo {
-	var personnelInfo types.PersonnelInfo
+func (g *GoFakeItGenerator) GenerateFakeData() PersonnelInfo {
+	var personnelInfo PersonnelInfo
 	for i := 0; i < noOfFakeDataOperations; i++ {
 		personnelInfo.FirstNames = append(personnelInfo.FirstNames, g.GenerateFirstName())
 		personnelInfo.LastNames = append(personnelInfo.LastNames, g.GenerateLastName())

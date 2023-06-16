@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"mongo-oplog-populator/config"
-	"mongo-oplog-populator/internal/app/populator/types"
+	"mongo-oplog-populator/internal/app/populator/generator"
 
 	"time"
 
@@ -18,18 +17,18 @@ import (
 var ctx = context.Background()
 
 // TODO: generateData should be called once in main and passed here
-func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, dataList []Data, opSize *OperationSize) {
+func Populate(ctx context.Context, mclient *mongo.Client, dataList []generator.Data, opSize *generator.OperationSize) {
 
 	//TODO: calculate opsize once  and pass to populate func
 	//TODO-DONE: move reader from here
 
 	var updateCount = 0
 	var deleteCount = 0
-	var insertedDataList []Data
+	var insertedDataList []generator.Data
 
 	rand.Seed(time.Now().UnixNano())
 
-	//TODO : refactor this part of code
+	//TODO: refactor this part of code
 populateLoop:
 	for i := 0; i < len(dataList); i++ {
 		select {
@@ -74,29 +73,9 @@ populateLoop:
 			}
 		}
 	}
-
-	//insert data for alter table
-	// 	data := generateDataAlterTable(3, personnelInfo)
-	// alterLoop:
-	// 	for i := 0; i < len(data); i++ {
-	// 		select {
-	// 		case <-ctx.Done():
-	// 			// The context is done, stop reading Oplogs
-	// 			break alterLoop
-	// 		default:
-	// 			// Context is still active, continue reading Oplogs
-	// 		}
-	// 		fmt.Println("Alter successfull")
-	// 		insertedData, err := insertData(data[i])
-	// 		if err != nil {
-	// 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
-	// 			continue
-	// 		}
-	// 		results = append(results, insertedData)
-	// 	}
 }
 
-func CalculateOperationSize(totalOperation int) *OperationSize {
+func CalculateOperationSize(totalOperation int) *generator.OperationSize {
 	i := (85 * totalOperation) / 100
 	i = int(math.Max(float64(i), 1))
 
@@ -106,7 +85,7 @@ func CalculateOperationSize(totalOperation int) *OperationSize {
 	d := (5 * totalOperation) / 100
 	d = int(math.Max(float64(d), 1))
 
-	opSize := &OperationSize{
+	opSize := &generator.OperationSize{
 		Insert: i,
 		Update: u,
 		Delete: d,
@@ -115,15 +94,15 @@ func CalculateOperationSize(totalOperation int) *OperationSize {
 	return opSize
 }
 
-func GenerateData(operations int, attributes types.PersonnelInfo) []Data {
+func GenerateData(operations int, attributes generator.PersonnelInfo) []generator.Data {
 	x := operations / 2
-	var data []Data
+	var data []generator.Data
 	index := 0
 	for i := 0; i < x; i++ {
-		emp := &Employee{}
+		emp := &generator.Employee{}
 		empData := emp.GetData(attributes, index)
 		data = append(data, empData)
-		student := &Student{}
+		student := &generator.Student{}
 		studentData := student.GetData(attributes, index)
 		data = append(data, studentData)
 		index++
@@ -138,14 +117,14 @@ func GenerateData(operations int, attributes types.PersonnelInfo) []Data {
 	return data
 }
 
-func generateDataAlterTable(operations int, attributes types.PersonnelInfo) []Data {
-	var data []Data
+func generateDataAlterTable(operations int, attributes generator.PersonnelInfo) []generator.Data {
+	var data []generator.Data
 	index := 0
 	for i := 0; i < operations; i++ {
-		emp := &EmployeeA{}
+		emp := &generator.EmployeeA{}
 		empData := emp.GetData(attributes, index)
 		data = append(data, empData)
-		student := &StudentA{}
+		student := &generator.StudentA{}
 		studentData := student.GetData(attributes, index)
 		data = append(data, studentData)
 		index++
@@ -157,7 +136,7 @@ func generateDataAlterTable(operations int, attributes types.PersonnelInfo) []Da
 	return data
 }
 
-func shuffle(slice []Data) {
+func shuffle(slice []generator.Data) {
 	for i := range slice {
 		j := rand.Intn(i + 1)
 		slice[i], slice[j] = slice[j], slice[i]
@@ -178,7 +157,7 @@ func isMultipleOfTwoNineortweleve(n int) bool {
 	return n%2 == 0 || n%9 == 0 || n%12 == 0 || n == 10
 }
 
-func insertData(data Data, client *mongo.Client) (*mongo.InsertOneResult, error) {
+func insertData(data generator.Data, client *mongo.Client) (*mongo.InsertOneResult, error) {
 	collection := data.GetCollection(client)
 	InsertOneResult, err := collection.InsertOne(ctx, data)
 	if err != nil {
@@ -187,7 +166,7 @@ func insertData(data Data, client *mongo.Client) (*mongo.InsertOneResult, error)
 	return InsertOneResult, nil
 }
 
-func updateData(data Data, client *mongo.Client) (*mongo.UpdateResult, error) {
+func updateData(data generator.Data, client *mongo.Client) (*mongo.UpdateResult, error) {
 	collection := data.GetCollection(client)
 	update := data.GetUpdate()
 	updateOneResult, err := collection.UpdateOne(ctx, data, update)
@@ -197,7 +176,7 @@ func updateData(data Data, client *mongo.Client) (*mongo.UpdateResult, error) {
 	return updateOneResult, nil
 }
 
-func deleteData(data Data, client *mongo.Client) (*mongo.DeleteResult, error) {
+func deleteData(data generator.Data, client *mongo.Client) (*mongo.DeleteResult, error) {
 	collection := data.GetCollection(client)
 	deleteResult, err := collection.DeleteOne(ctx, data)
 	if err != nil {

@@ -1,7 +1,5 @@
 package generator
 
-import "mongo-oplog-populator/internal/app/populator/types"
-
 // TODO-DONE: generator will be an interface to generate data
 type CustomDataGenerator interface {
 	GenerateFirstName() string
@@ -14,5 +12,5 @@ type CustomDataGenerator interface {
 	GenerateAge(i int) int
 	GenerateWorkHours(i int) int
 	GenerateSalary(i int) float64
-	GenerateFakeData() types.PersonnelInfo
+	GenerateFakeData() PersonnelInfo
 }

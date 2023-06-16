@@ -1,4 +1,4 @@
-package service
+package generator
 
 type Employee struct {
 	Name     string
@@ -43,4 +43,10 @@ type Address struct {
 }
 type OperationSize struct {
 	Insert, Update, Delete int
+}
+
+type PersonnelInfo struct {
+	FirstNames, LastNames, Subjects, StreetAddresses, Positions, Zips, PhoneNumbers []string
+	Ages, Workhours                                                                 []int
+	Salaries                                                                        []float64
 }

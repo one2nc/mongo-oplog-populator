@@ -1,7 +1,7 @@
 package reader
 
-import "mongo-oplog-populator/internal/app/populator/types"
+import "mongo-oplog-populator/internal/app/populator/generator"
 
 type Reader interface {
-	ReadData() types.PersonnelInfo
+	ReadData() generator.PersonnelInfo
 }

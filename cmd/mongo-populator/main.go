@@ -76,7 +76,7 @@ var rootCmd = &cobra.Command{
 		//Disconnect Client (pass ctx later for disconnecting mongo client)
 		defer writer.DisconnectClient(ctx, client)
 
-		//TODO: remove hardcoded number from here
+		//TODO-DONE: remove hardcoded number from here
 		noOfOperations := getNoOfOperations(streamInsert, numRecords)
 		opSize := service.CalculateOperationSize(noOfOperations)
 
@@ -85,7 +85,7 @@ var rootCmd = &cobra.Command{
 		dataList := service.GenerateData(opSize.Insert, personnelInfo)
 
 		populator := createPopulator(numRecords, streamInsert)
-		populator.PopulateData(ctx, client, cfg, dataList, opSize)
+		populator.PopulateData(ctx, client, dataList, opSize)
 	},
 }
 

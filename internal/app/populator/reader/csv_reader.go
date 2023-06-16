@@ -3,7 +3,7 @@ package reader
 import (
 	"encoding/csv"
 	"log"
-	"mongo-oplog-populator/internal/app/populator/types"
+	"mongo-oplog-populator/internal/app/populator/generator"
 
 	"os"
 	"strconv"
@@ -19,8 +19,8 @@ func NewCSVReader(filepath string) Reader {
 	}
 }
 
-func (csvr *CSVReader) ReadData() types.PersonnelInfo {
-	var attributes types.PersonnelInfo
+func (csvr *CSVReader) ReadData() generator.PersonnelInfo {
+	var attributes generator.PersonnelInfo
 	file, err := os.Open(csvr.FilePath)
 	if err != nil {
 		log.Fatal("Could not open file:", err)
