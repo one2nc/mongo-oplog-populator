@@ -44,3 +44,6 @@
 
 6. Tear down mongo
     `make setup-down`
+
+
+NOTE: If you want to insert more records in mongo, run multiple instances of mongo-populator.
