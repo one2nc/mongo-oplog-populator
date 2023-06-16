@@ -25,10 +25,9 @@
    
    `make build`
 
-2.  Run `./mongopop -b 10` for bulk operations  and 
+2.  Run `./mongopop 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
      *  *./mongopop* is the binary file
-     *  *-b* is the flag for bulk operation
      *  *-s* is the flag for stream operation
      *  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
     
