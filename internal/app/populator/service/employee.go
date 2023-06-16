@@ -11,7 +11,7 @@ import (
 // TODO: move this to Generator(example) package
 
 // TODO-DONE: move generated csv to that folder
-func (e *Employee) GetCollection() *mongo.Collection {
+func (e *Employee) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
@@ -46,7 +46,7 @@ func (e *Employee) GetUpdate() interface{} {
 	}
 }
 
-func (e *EmployeeA) GetCollection() *mongo.Collection {
+func (e *EmployeeA) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 

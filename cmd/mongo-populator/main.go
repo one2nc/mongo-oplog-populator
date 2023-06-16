@@ -77,7 +77,8 @@ var rootCmd = &cobra.Command{
 		defer writer.DisconnectClient(ctx, client)
 
 		//TODO: remove hardcoded number from here
-		opSize := service.CalculateOperationSize(10000)
+		noOfOperations := getNoOfOperations(streamInsert, numRecords)
+		opSize := service.CalculateOperationSize(noOfOperations)
 
 		//TODO-DONE: move reader from here
 
@@ -108,6 +109,13 @@ func createPopulator(bulkInsert, streamInsert int) domain.Populator {
 		populator = domain.NewBulkInsert(bulkInsert)
 	}
 	return populator
+}
+
+func getNoOfOperations(streamInsert int, numRecords int) int {
+	if streamInsert > 0 {
+		return streamInsert
+	}
+	return numRecords
 }
 
 func main() {

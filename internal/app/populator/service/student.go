@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (s *Student) GetCollection() *mongo.Collection {
+func (s *Student) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 
@@ -38,7 +38,7 @@ func (s *Student) GetUpdate() interface{} {
 	}
 }
 
-func (s *StudentA) GetCollection() *mongo.Collection {
+func (s *StudentA) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("student").Collection("students")
 }
 

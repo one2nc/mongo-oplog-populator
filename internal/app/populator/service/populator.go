@@ -13,21 +13,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// remove client
-var client *mongo.Client
+// TODO-DONE: remove client
 
 var ctx = context.Background()
 
-// TODO : generateData should be called once in main and passed here
+// TODO: generateData should be called once in main and passed here
 func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, dataList []Data, opSize *OperationSize) {
-	client = mclient
 
-	//TODO : calculate once  and pass to populate func
-	//opSize := CalculateOperationSize(operations)
-
+	//TODO: calculate opsize once  and pass to populate func
 	//TODO-DONE: move reader from here
-
-	//dataList := GenerateData(opSize.insert, personnelInfo)
 
 	var updateCount = 0
 	var deleteCount = 0
@@ -45,7 +39,7 @@ populateLoop:
 		default:
 			// Context is still active, continue reading Oplogs
 		}
-		_, err := insertData(dataList[i])
+		_, err := insertData(dataList[i], mclient)
 		if err != nil {
 			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
 			continue
@@ -55,7 +49,7 @@ populateLoop:
 		//update
 		if isMultipleOfSevenEightOrEleven(i) {
 			if updateCount < opSize.Update {
-				_, err := updateData(insertedDataList[i])
+				_, err := updateData(insertedDataList[i], mclient)
 				if err != nil {
 					fmt.Printf("Failed to update data at index %d: %s\n", i, err.Error())
 					continue
@@ -69,7 +63,7 @@ populateLoop:
 		if isMultipleOfTwoNineortweleve(i) {
 			if deleteCount < opSize.Delete {
 				indx := rand.Intn(i)
-				_, err := deleteData(insertedDataList[indx])
+				_, err := deleteData(insertedDataList[indx], mclient)
 				if err != nil {
 					fmt.Printf("Failed to delete data at index %d: %s\n", i, err.Error())
 					continue
@@ -184,8 +178,8 @@ func isMultipleOfTwoNineortweleve(n int) bool {
 	return n%2 == 0 || n%9 == 0 || n%12 == 0 || n == 10
 }
 
-func insertData(data Data) (*mongo.InsertOneResult, error) {
-	collection := data.GetCollection()
+func insertData(data Data, client *mongo.Client) (*mongo.InsertOneResult, error) {
+	collection := data.GetCollection(client)
 	InsertOneResult, err := collection.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
@@ -193,8 +187,8 @@ func insertData(data Data) (*mongo.InsertOneResult, error) {
 	return InsertOneResult, nil
 }
 
-func updateData(data Data) (*mongo.UpdateResult, error) {
-	collection := data.GetCollection()
+func updateData(data Data, client *mongo.Client) (*mongo.UpdateResult, error) {
+	collection := data.GetCollection(client)
 	update := data.GetUpdate()
 	updateOneResult, err := collection.UpdateOne(ctx, data, update)
 	if err != nil {
@@ -203,8 +197,8 @@ func updateData(data Data) (*mongo.UpdateResult, error) {
 	return updateOneResult, nil
 }
 
-func deleteData(data Data) (*mongo.DeleteResult, error) {
-	collection := data.GetCollection()
+func deleteData(data Data, client *mongo.Client) (*mongo.DeleteResult, error) {
+	collection := data.GetCollection(client)
 	deleteResult, err := collection.DeleteOne(ctx, data)
 	if err != nil {
 		return nil, err
