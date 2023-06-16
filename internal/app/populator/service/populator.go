@@ -18,9 +18,11 @@ var client *mongo.Client
 
 var ctx = context.Background()
 
+//TODO : generateData should be called once in main and passed here
 func Populate(ctx context.Context, mclient *mongo.Client, operations int, cfg config.Config, personnelInfo types.PersonnelInfo) []interface{} {
 	client = mclient
 
+	//TODO : calculate once  and pass to populate func
 	opSize := calculateOperationSize(operations)
 
 	//TODO-DONE: move reader from here
