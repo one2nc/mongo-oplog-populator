@@ -5,15 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "mongo-oplog-populator",
+            "name": "bulk-populator",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/mongo-populator/.",
             "args": [
-                "-b",
-                "200",
+                "10",
+            ]
+        },
+        {
+            "name": "stream-populator",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/mongo-populator/.",
+            "args": [
+                "-s",
+                "10",
             ]
         },
     ]

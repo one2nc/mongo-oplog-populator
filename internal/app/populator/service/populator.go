@@ -4,84 +4,110 @@ import (
 	"context"
 	"fmt"
 	"math"
-	"math/rand"
+	"sync"
 
 	"mongo-oplog-populator/internal/app/populator/generator"
-
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Service struct {
-	NoOfOperations int
-	ModeFlag       bool
+type Populator interface {
+	PopulateData(ctx context.Context, fakeData generator.FakeData)
 }
 
-func NewService(modeFlag bool, noOfOperations int) Service {
-	return Service{
+type populator struct {
+	OpSize         generator.OperationSize
+	NoOfOperations int
+	ModeFlag       bool
+	Client         *mongo.Client
+}
+
+func NewPopulator(client *mongo.Client, modeFlag bool, noOfOperations int) Populator {
+	return &populator{
+		OpSize:         calculateOperationSize(noOfOperations),
+		Client:         client,
 		ModeFlag:       modeFlag,
 		NoOfOperations: noOfOperations,
 	}
 }
 
-var ctx = context.Background()
+func (p populator) PopulateData(ctx context.Context, fakeData generator.FakeData) {
+	// Generate data
+	dataGenerator := createDataGenerator(p.NoOfOperations, p.ModeFlag)
+	dataChan := dataGenerator.Generate(ctx, fakeData)
 
-func Populate(ctx context.Context, dataList []generator.Data, opSize *generator.OperationSize) {
+	var wg sync.WaitGroup
 
-	var updateCount = 0
-	var deleteCount = 0
-	var insertedDataList []generator.Data
+	workerCnt := 25
+	for i := 0; i < workerCnt; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			fmt.Printf("workerID: %v\n", workerID)
+			p.worker(ctx, dataChan)
+		}(i)
+	}
 
-	rand.Seed(time.Now().UnixNano())
+	wg.Wait()
+}
 
-populateLoop:
-	for i := 0; i < len(dataList); i++ {
+func (p populator) worker(ctx context.Context, dataChan <-chan generator.Data) {
+	updateCount := 0
+	deleteCount := 0
+	idx := 0
+	for data := range dataChan {
 		select {
 		case <-ctx.Done():
 			// The context is done, stop reading Oplogs
-			break populateLoop
+			return
 		default:
 			// Context is still active, continue reading Oplogs
 		}
-		_, err := insertData(dataList[i], mclient)
+
+		_, err := p.insertData(ctx, data)
 		if err != nil {
-			fmt.Printf("Failed to insert data at index %d: %s\n", i, err.Error())
-			continue
+			fmt.Printf("Failed to insert data at index %d: %s\n", idx, err.Error())
+			return
 		}
-		insertedDataList = append(insertedDataList, dataList[i])
-		//println("inserting Data")
+
 		//update
-		if isMultipleOfSevenEightOrEleven(i) {
-			if updateCount < opSize.Update {
-				_, err := updateData(insertedDataList[i], mclient)
-				if err != nil {
-					fmt.Printf("Failed to update data at index %d: %s\n", i, err.Error())
-					continue
-				}
-				updateCount++
-				//println("updating data")
+		if isMultipleOfSevenEightOrEleven(idx) {
+			updateCount, err = p.updateData(ctx, data, updateCount)
+			if err != nil {
+				fmt.Printf("Failed to update data at index %d: %s\n", idx, err.Error())
+				return
 			}
 		}
 
 		//delete
-		if isMultipleOfTwoNineortweleve(i) {
-			if deleteCount < opSize.Delete {
-				indx := rand.Intn(i)
-				_, err := deleteData(insertedDataList[indx], mclient)
-				if err != nil {
-					fmt.Printf("Failed to delete data at index %d: %s\n", i, err.Error())
-					continue
-				}
-				insertedDataList = append(insertedDataList[:indx], insertedDataList[indx:]...)
-				deleteCount++
-				//println("Deleting Data")
+		if isMultipleOfTwoNineortweleve(idx) {
+			deleteCount, err = p.deleteData(ctx, data, deleteCount)
+			if err != nil {
+				fmt.Printf("Failed to delete data at index %d: %s\n", idx, err.Error())
+				return
 			}
+		}
+
+		idx++
+
+		// reset update and delete count on each set of operations
+		if idx%p.NoOfOperations == 0 {
+			updateCount, deleteCount = 0, 0
 		}
 	}
 }
 
-func CalculateOperationSize(totalOperation int) *generator.OperationSize {
+func createDataGenerator(noOfOperations int, modeFlag bool) generator.Generator {
+	var dataGenerator generator.Generator
+	if modeFlag {
+		dataGenerator = generator.NewStreamDataGenerator(noOfOperations)
+	} else {
+		dataGenerator = generator.NewBulkDataGenerator(noOfOperations)
+	}
+	return dataGenerator
+}
+
+func calculateOperationSize(totalOperation int) generator.OperationSize {
 	i := (85 * totalOperation) / 100
 	i = int(math.Max(float64(i), 1))
 
@@ -91,7 +117,7 @@ func CalculateOperationSize(totalOperation int) *generator.OperationSize {
 	d := (5 * totalOperation) / 100
 	d = int(math.Max(float64(d), 1))
 
-	opSize := &generator.OperationSize{
+	opSize := generator.OperationSize{
 		Insert: i,
 		Update: u,
 		Delete: d,
@@ -100,54 +126,63 @@ func CalculateOperationSize(totalOperation int) *generator.OperationSize {
 	return opSize
 }
 
-func GenerateData(noOfOperations int, attributes generator.FakeData) []generator.Data {
-	//operations := s.Opsize.Insert
-	x := noOfOperations / 2
-	var data []generator.Data
-	index := 0
-	for i := 0; i < x; i++ {
-		emp := &generator.Employee{}
-		empData := emp.GetData(attributes, index)
-		data = append(data, empData)
-		student := &generator.Student{}
-		studentData := student.GetData(attributes, index)
-		data = append(data, studentData)
-		index++
-		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
-		if index > len(attributes.FirstNames)-2 {
-			index = 0
-		}
+func (p populator) insertData(ctx context.Context, data generator.Data) (*mongo.InsertOneResult, error) {
+	select {
+	case <-ctx.Done():
+		// The context is done, stop reading Oplogs
+		return nil, nil
+	default:
 	}
-	dataAlterTable := generateDataAlterTable(3, attributes)
-	data = append(data, dataAlterTable...)
-	shuffle(data)
-	return data
+
+	collection := data.GetCollection(p.Client)
+	InsertOneResult, err := collection.InsertOne(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+	// fmt.Println("Inserted data")
+	return InsertOneResult, nil
 }
 
-func generateDataAlterTable(operations int, attributes generator.FakeData) []generator.Data {
-	var data []generator.Data
-	index := 0
-	for i := 0; i < operations; i++ {
-		emp := &generator.EmployeeA{}
-		empData := emp.GetData(attributes, index)
-		data = append(data, empData)
-		student := &generator.StudentA{}
-		studentData := student.GetData(attributes, index)
-		data = append(data, studentData)
-		index++
-		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
-		if index > len(attributes.FirstNames)-2 {
-			index = 0
-		}
+func (p populator) updateData(ctx context.Context, data generator.Data, updateCount int) (int, error) {
+	select {
+	case <-ctx.Done():
+		// The context is done, stop reading Oplogs
+		return updateCount, nil
+	default:
 	}
-	return data
+
+	if updateCount < p.OpSize.Update {
+		collection := data.GetCollection(p.Client)
+		update := data.GetUpdate()
+		_, err := collection.UpdateOne(ctx, data, update)
+		if err != nil {
+			return updateCount, err
+		}
+		updateCount++
+		// fmt.Println("Updated data")
+	}
+
+	return updateCount, nil
 }
 
-func shuffle(slice []generator.Data) {
-	for i := range slice {
-		j := rand.Intn(i + 1)
-		slice[i], slice[j] = slice[j], slice[i]
+func (p populator) deleteData(ctx context.Context, data generator.Data, deleteCount int) (int, error) {
+	select {
+	case <-ctx.Done():
+		// The context is done, stop reading Oplogs
+		return deleteCount, nil
+	default:
 	}
+
+	if deleteCount < p.OpSize.Delete {
+		collection := data.GetCollection(p.Client)
+		_, err := collection.DeleteOne(ctx, data)
+		if err != nil {
+			return deleteCount, err
+		}
+		deleteCount++
+		// fmt.Println("Deleted data")
+	}
+	return deleteCount, nil
 }
 
 func isMultipleOfSevenEightOrEleven(n int) bool {
@@ -162,53 +197,4 @@ func isMultipleOfTwoNineortweleve(n int) bool {
 		return false
 	}
 	return n%2 == 0 || n%9 == 0 || n%12 == 0 || n == 10
-}
-
-func insertData(data generator.Data, client *mongo.Client) (*mongo.InsertOneResult, error) {
-	collection := data.GetCollection(client)
-	InsertOneResult, err := collection.InsertOne(ctx, data)
-	if err != nil {
-		return nil, err
-	}
-	return InsertOneResult, nil
-}
-
-func updateData(data generator.Data, client *mongo.Client) (*mongo.UpdateResult, error) {
-	collection := data.GetCollection(client)
-	update := data.GetUpdate()
-	updateOneResult, err := collection.UpdateOne(ctx, data, update)
-	if err != nil {
-		return nil, err
-	}
-	return updateOneResult, nil
-}
-
-func deleteData(data generator.Data, client *mongo.Client) (*mongo.DeleteResult, error) {
-	collection := data.GetCollection(client)
-	deleteResult, err := collection.DeleteOne(ctx, data)
-	if err != nil {
-		return nil, err
-	}
-	return deleteResult, nil
-}
-
-func getNoOfOperations(streamInsert int, numRecords int) int {
-	if streamInsert > 0 {
-		return streamInsert
-	}
-	return numRecords
-}
-
-func createPopulator(noOfOperations int, modeFlag bool) Populator {
-	var populator Populator
-	if modeFlag {
-		populator = NewStreamInsert(noOfOperations)
-	} else {
-		populator = NewBulkInsert(noOfOperations)
-	}
-	return populator
-}
-func (s Service) PopulateData(ctx context.Context, fakeData generator.FakeData) {
-	populator := createPopulator(s.NoOfOperations, s.ModeFlag)
-	populator.PopulateData(ctx, fakeData)
 }

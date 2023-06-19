@@ -10,7 +10,7 @@ var noOfFakeDataOperations int = 1000
 type GoFakeItGenerator struct {
 }
 
-func NewGoFakeItGenerator() CustomDataGenerator {
+func NewGoFakeItGenerator() DataGenerator {
 	return &GoFakeItGenerator{}
 }
 
