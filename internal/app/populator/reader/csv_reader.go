@@ -19,8 +19,8 @@ func NewCSVReader(filepath string) Reader {
 	}
 }
 
-func (csvr *CSVReader) ReadData() generator.PersonnelInfo {
-	var attributes generator.PersonnelInfo
+func (csvr *CSVReader) ReadData() generator.FakeData {
+	var attributes generator.FakeData
 	file, err := os.Open(csvr.FilePath)
 	if err != nil {
 		log.Fatal("Could not open file:", err)

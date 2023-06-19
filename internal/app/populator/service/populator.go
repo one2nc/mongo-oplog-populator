@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+
 	"mongo-oplog-populator/internal/app/populator/generator"
 
 	"time"
@@ -12,15 +13,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// TODO-DONE: remove client
+type Service struct {
+	NoOfOperations int
+	ModeFlag       bool
+}
+
+func NewService(modeFlag bool, noOfOperations int) Service {
+	return Service{
+		ModeFlag:       modeFlag,
+		NoOfOperations: noOfOperations,
+	}
+}
 
 var ctx = context.Background()
 
-// TODO: generateData should be called once in main and passed here
-func Populate(ctx context.Context, mclient *mongo.Client, dataList []generator.Data, opSize *generator.OperationSize) {
-
-	//TODO: calculate opsize once  and pass to populate func
-	//TODO-DONE: move reader from here
+func Populate(ctx context.Context, dataList []generator.Data, opSize *generator.OperationSize) {
 
 	var updateCount = 0
 	var deleteCount = 0
@@ -28,7 +35,6 @@ func Populate(ctx context.Context, mclient *mongo.Client, dataList []generator.D
 
 	rand.Seed(time.Now().UnixNano())
 
-	//TODO: refactor this part of code
 populateLoop:
 	for i := 0; i < len(dataList); i++ {
 		select {
@@ -44,7 +50,7 @@ populateLoop:
 			continue
 		}
 		insertedDataList = append(insertedDataList, dataList[i])
-		println("inserting Data")
+		//println("inserting Data")
 		//update
 		if isMultipleOfSevenEightOrEleven(i) {
 			if updateCount < opSize.Update {
@@ -54,7 +60,7 @@ populateLoop:
 					continue
 				}
 				updateCount++
-				println("updating data")
+				//println("updating data")
 			}
 		}
 
@@ -69,7 +75,7 @@ populateLoop:
 				}
 				insertedDataList = append(insertedDataList[:indx], insertedDataList[indx:]...)
 				deleteCount++
-				println("Deleting Data")
+				//println("Deleting Data")
 			}
 		}
 	}
@@ -94,8 +100,9 @@ func CalculateOperationSize(totalOperation int) *generator.OperationSize {
 	return opSize
 }
 
-func GenerateData(operations int, attributes generator.PersonnelInfo) []generator.Data {
-	x := operations / 2
+func GenerateData(noOfOperations int, attributes generator.FakeData) []generator.Data {
+	//operations := s.Opsize.Insert
+	x := noOfOperations / 2
 	var data []generator.Data
 	index := 0
 	for i := 0; i < x; i++ {
@@ -117,7 +124,7 @@ func GenerateData(operations int, attributes generator.PersonnelInfo) []generato
 	return data
 }
 
-func generateDataAlterTable(operations int, attributes generator.PersonnelInfo) []generator.Data {
+func generateDataAlterTable(operations int, attributes generator.FakeData) []generator.Data {
 	var data []generator.Data
 	index := 0
 	for i := 0; i < operations; i++ {
@@ -183,4 +190,25 @@ func deleteData(data generator.Data, client *mongo.Client) (*mongo.DeleteResult,
 		return nil, err
 	}
 	return deleteResult, nil
+}
+
+func getNoOfOperations(streamInsert int, numRecords int) int {
+	if streamInsert > 0 {
+		return streamInsert
+	}
+	return numRecords
+}
+
+func createPopulator(noOfOperations int, modeFlag bool) Populator {
+	var populator Populator
+	if modeFlag {
+		populator = NewStreamInsert(noOfOperations)
+	} else {
+		populator = NewBulkInsert(noOfOperations)
+	}
+	return populator
+}
+func (s Service) PopulateData(ctx context.Context, fakeData generator.FakeData) {
+	populator := createPopulator(s.NoOfOperations, s.ModeFlag)
+	populator.PopulateData(ctx, fakeData)
 }

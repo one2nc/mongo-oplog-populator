@@ -1,6 +1,5 @@
 package generator
 
-// TODO-DONE: generator will be an interface to generate data
 type CustomDataGenerator interface {
 	GenerateFirstName() string
 	GenerateLastName() string
@@ -12,5 +11,5 @@ type CustomDataGenerator interface {
 	GenerateAge(i int) int
 	GenerateWorkHours(i int) int
 	GenerateSalary(i int) float64
-	GenerateFakeData() PersonnelInfo
+	GenerateFakeData() FakeData
 }

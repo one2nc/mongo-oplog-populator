@@ -7,14 +7,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// TODO-DONE: move this to Generator(example) package
-
-// TODO-DONE: move generated csv to that folder
 func (e *Employee) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
-func (e *Employee) GetData(attributes PersonnelInfo, index int) Data {
+func (e *Employee) GetData(attributes FakeData, index int) Data {
 	return &Employee{
 		Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:    attributes.Ages[index],
@@ -49,7 +46,7 @@ func (e *EmployeeA) GetCollection(client *mongo.Client) *mongo.Collection {
 	return client.Database("employee").Collection("employees")
 }
 
-func (e *EmployeeA) GetData(attributes PersonnelInfo, index int) Data {
+func (e *EmployeeA) GetData(attributes FakeData, index int) Data {
 	return &EmployeeA{
 		Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
 		Age:    attributes.Ages[index],
@@ -73,8 +70,6 @@ func (e *EmployeeA) GetUpdateUnset() interface{} {
 }
 
 func (e *EmployeeA) GetUpdate() interface{} {
-	//TODO-DONE : don't use gofakeit here
-	//TODO-DONE: use your custom gofakeit(example) package/interface
 	updateE := getBoolean()
 	if updateE {
 		return e.GetUpdateSet()
