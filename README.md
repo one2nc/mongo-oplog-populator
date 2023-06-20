@@ -9,7 +9,7 @@
   > - 85% Insert
   > - 10% updates
   > - 5% deletes
-
+  > - 10% of total number of operations Alters (for each database)
 ## Features
 1. Bulk Insert: Perform fixed number of operations provided by the user and terminates the program
 
@@ -27,13 +27,16 @@
 2.  Run `./mongopop 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
      *  *./mongopop* is the binary file
-     *  *-s* is the flag for stream operation
+     *  *-s* is the boolean flag for stream operation
      *  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
     
 
 3. To connect to mongo cluster `make connect`
+4. To enter into student database `use student` and for employee datatbase `use employee`
+   - to count number of records in students table in student database `db.students.count()` 
+   - to count number of records in employees table in employee database `db.employees.count()`
 
-4. To check oplogs in mongo execute the following commands:
+5. To check oplogs in mongo execute the following commands:
     - Change the database to local `use local` since all the oplogs are located in a file oplog.rs which is in local database
     - To see the oplogs generated:
       *  `db.oplog.rs.find({})` to see all oplogs

@@ -43,7 +43,7 @@ func (p populator) PopulateData(ctx context.Context, fakeData generator.FakeData
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			fmt.Printf("workerID: %v\n", workerID)
+			//fmt.Printf("workerID: %v\n", workerID)
 			p.worker(ctx, dataChan)
 		}(i)
 	}
