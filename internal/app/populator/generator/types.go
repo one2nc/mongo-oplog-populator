@@ -45,7 +45,7 @@ type OperationSize struct {
 	Insert, Update, Delete int
 }
 
-type PersonnelInfo struct {
+type FakeData struct {
 	FirstNames, LastNames, Subjects, StreetAddresses, Positions, Zips, PhoneNumbers []string
 	Ages, Workhours                                                                 []int
 	Salaries                                                                        []float64

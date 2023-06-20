@@ -17,7 +17,7 @@ func NewCSVWriter(filepath string) Writer {
 	return &CSVWriter{FilePath: filepath}
 }
 
-func (csvw *CSVWriter) WriteData(personnelInfo generator.PersonnelInfo) {
+func (csvw *CSVWriter) WriteData(personnelInfo generator.FakeData) {
 	file, err := os.Create(csvw.FilePath)
 	if err != nil {
 		log.Fatal("Could not create file:", err)
@@ -25,17 +25,12 @@ func (csvw *CSVWriter) WriteData(personnelInfo generator.PersonnelInfo) {
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
-	// TODO-DONE:Add threshold for flush
 
-	//TODO-DONE: create a method for CSV headers in CSV writer
 	headers := getCSVHeaders()
 	err = writer.Write(headers)
 	if err != nil {
 		log.Fatal("Error writing header to CSV:", err)
 	}
-
-	//TODO-DONE: generate randomInt once and modify it
-	//TODO-DONE: Modify this Code
 
 	for i := 0; i < len(personnelInfo.FirstNames); i++ {
 		row := []string{

@@ -10,7 +10,7 @@ var noOfFakeDataOperations int = 1000
 type GoFakeItGenerator struct {
 }
 
-func (g *GoFakeItGenerator) NewGoFakeItGenerator() CustomDataGenerator {
+func NewGoFakeItGenerator() DataGenerator {
 	return &GoFakeItGenerator{}
 }
 
@@ -68,8 +68,8 @@ func (*GoFakeItGenerator) GenerateZip() string {
 }
 
 // TODO-DONE: generate 1000 data
-func (g *GoFakeItGenerator) GenerateFakeData() PersonnelInfo {
-	var personnelInfo PersonnelInfo
+func (g *GoFakeItGenerator) GenerateFakeData() FakeData {
+	var personnelInfo FakeData
 	for i := 0; i < noOfFakeDataOperations; i++ {
 		personnelInfo.FirstNames = append(personnelInfo.FirstNames, g.GenerateFirstName())
 		personnelInfo.LastNames = append(personnelInfo.LastNames, g.GenerateLastName())
