@@ -43,7 +43,7 @@ func (p populator) PopulateData(ctx context.Context, fakeData generator.FakeData
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
-			fmt.Printf("workerID: %v\n", workerID)
+			//fmt.Printf("workerID: %v\n", workerID)
 			p.worker(ctx, dataChan)
 		}(i)
 	}
@@ -122,6 +122,7 @@ func calculateOperationSize(totalOperation int) generator.OperationSize {
 		Update: u,
 		Delete: d,
 	}
+	fmt.Printf("Out of total %d operations, %d: insert  %d:update %d:delete", totalOperation, i, u, d)
 
 	return opSize
 }
