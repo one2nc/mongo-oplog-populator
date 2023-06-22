@@ -12,6 +12,3 @@ setup-down:
 
 build:
 	go build -o mongopop ./cmd/mongo-populator
-
-populate: build
-	./mongopop oplogpop 

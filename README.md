@@ -1,7 +1,7 @@
 # Mongo-oplog-populator
 
-MongoDB oplog populator (alias `mongopop`) allows you to simulate insert, update and delete traffic in MongoDB.
-This repo is a companion repo for https://github.com/one2nc/mongo-oplog-to-sql
+MongoDB oplog populator (alias `mongopop`) allows you to simulate traffic (insert, update and delete) in MongoDB.
+This repo is a companion repo for https://github.com/one2nc/mongo-oplog-to-sql.
 If you want to test your `mongo-oplog-to-sql` binary on large data, you should use `mongopop`.
 
 ### How it works?
@@ -11,7 +11,7 @@ The employees collection is created in employee database while the students coll
 
 ![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
 
-`mongopop` supports two modes: bulk form or stream mode. 
+`mongopop` supports two modes: bulk mode and stream mode. 
 
 1. Bulk mode: Perform fixed number of operations provided by the user and terminate the program.
 2. Stream mode: Perform fixed number of operations provided by user per second for indefinite time. The program stops only when the user gives a stop signal (ctrl+c)
@@ -27,18 +27,18 @@ The number of operations you specify via CLI are divided into insert, update and
 i.e. In case of `$ ./mongopop 100`, 50 operations will be done on employee collection and remaining 50 will be done on student collection.
 
 ### Setup 
-1. Setup mongo: Spins up 3 container of mongo
+1. Setup mongo: Start a MongoDB replica server with 3 MongoDB instances (1 primary and 2 secondaries)
   
    `make setup`
 
-2. Build the application: Builds a binary of mongo-oplog-populator
+2. Build the application: Builds a binary of mongo-oplog-populator, i.e. `mongopop`
    
    `make build`
 
 2.  Run `./mongopop 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
-     -  *./mongopop* is the binary file
-     -  *-s* is the flag for stream operation
+     -  `./mongopop` is the binary file
+     -  *-s* is the flag to enable streaming mode
      -  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
      
 3. To connect to mongo cluster `make connect`
