@@ -30,11 +30,17 @@ var rootCmd = &cobra.Command{
 	Short: "Data Populator in MongoDB",
 	Long:  "mongopop adds dummy data in MongoDB collections. It generates about 85% inserts, 10% updates and 5% deletes in employees and students collections.",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		if !cmd.Flags().HasFlags() {
 			cmd.Usage()
 			return
 		}
 
+		if len(os.Args) == 1 {
+			fmt.Println("Enter some value for number of operations e.g. ./mongopop 10")
+			return
+
+		}
 		noOfOperations, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Println("Invalid argument. Please provide a valid integer.")
