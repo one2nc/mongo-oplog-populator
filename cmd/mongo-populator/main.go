@@ -28,7 +28,7 @@ func init() {
 var rootCmd = &cobra.Command{
 	Use:   "mongopop",
 	Short: "Data Populator in MongoDB",
-	Long:  "This utility facilitates fake random data population in a MongoDB by providing functionalities to perform insert, update, and delete operations.",
+	Long:  "mongopop adds dummy data in MongoDB collections. It generates about 85% inserts, 10% updates and 5% deletes in employees and students collections.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !cmd.Flags().HasFlags() {
 			cmd.Usage()
@@ -43,6 +43,7 @@ var rootCmd = &cobra.Command{
 
 		cfg := config.Load()
 		var fakeData generator.FakeData
+
 		//checking if csv file already exists, if not, then create a writer
 		//TODO: pass cancel context to writer and reader, so that we can terminate
 		_, err = os.Stat(cfg.CsvFileName)

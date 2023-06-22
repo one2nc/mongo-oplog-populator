@@ -1,26 +1,37 @@
 # Mongo-oplog-populator
 
+MongoDB oplog populator (alias `mongopop`) allows you to simulate traffic (insert, update and delete) in MongoDB.
+This repo is a companion repo for https://github.com/one2nc/mongo-oplog-to-sql.
+If you want to test your `mongo-oplog-to-sql` binary on large data, you should use `mongopop`.
+
+### How it works?
+
+When you run `mongopop`, it creates two collection - employees and students in MongoDB and populates some data in those tables.
+The employees collection is created in employee database while the students collection is created in student database.
+
 ![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
 
+`mongopop` supports two modes: bulk mode and stream mode. 
 
- System supports populating the data in Mongo Database. The operations can be performed in a bulk form or in stream form.
+1. Bulk mode: Perform fixed number of operations provided by the user and terminate the program.
+2. Stream mode: Perform fixed number of operations provided by user per second for indefinite time. The program stops only when the user gives a stop signal (ctrl+c)
 
-> *Out of total Operations:*
-  > - 85% Insert
-  > - 10% updates
-  > - 5% deletes
+The number of operations you specify via CLI are divided into insert, update and delete operations in following proportion.
 
-## Features
-1. Bulk Insert: Perform fixed number of operations provided by the user and terminates the program
+- 85% Insert
+- 10% updates
+- 5% deletes
 
-2. Stream Insert: Perform fixed number of operations provided by user per second for indefinite time. The program stops only when the user gives a stop signal (ctrl+c) 
+`mongopop` performs insert, update and delete operations randomly. If you were to specify 100 operations, 85 of them will be inserts,
+10 will be updates and 5 will be delete opertions. The operations are divided equally into the two collections - employees.employee and students.student.
+i.e. In case of `$ ./mongopop 100`, 50 operations will be done on employee collection and remaining 50 will be done on student collection.
 
 ### Setup 
-1. Setup mongo: Spins up 3 container of mongo
+1. Setup mongo: Start a MongoDB replica server with 3 MongoDB instances (1 primary and 2 secondaries)
   
    `make setup`
 
-2. Build the application: Builds a binary of mongo-oplog-populator
+2. Build the application: Builds a binary of mongo-oplog-populator, i.e. `mongopop`
    
    `make build`
 
@@ -28,6 +39,7 @@
 
 4.  Run `./mongopop 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
+
      *  *./mongopop* is the binary file
      *  *-s* is the flag for stream operation
      *  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
@@ -38,13 +50,12 @@
 6. To check oplogs in mongo execute the following commands:
     - Change the database to local `use local` since all the oplogs are located in a file oplog.rs which is in local database
     - To see the oplogs generated:
-      *  `db.oplog.rs.find({})` to see all oplogs
-      *  `db.oplog.rs.find({op:"i"})` to see the insertions
-      *  `db.oplog.rs.find({op:"u"})` to see the updates
-      *  `db.oplog.rs.find({op:"d"})` to see the deletions
+      -  `db.oplog.rs.find({})` to see all oplogs
+      -  `db.oplog.rs.find({op:"i"})` to see the insertions
+      -  `db.oplog.rs.find({op:"u"})` to see the updates
+      -  `db.oplog.rs.find({op:"d"})` to see the deletions
 
 7. Tear down mongo
     `make setup-down`
 
-
-NOTE: If you want to insert more records in mongo, run multiple instances of mongo-populator.
+NOTE: If you want to insert more records in mongo, run multiple instances of `mongopop`.

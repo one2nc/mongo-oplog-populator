@@ -18,10 +18,6 @@ services:
       - 30001:30001
     networks:
       - mongoCluster
-  #    healthcheck:
-  #      test: test $$(echo "rs.initiate({_id:'my-replica-set',members:[{_id:0,host:\"mongo1:30001\"},{_id:1,host:\"mongo2:30002\"},{_id:2,host:\"mongo3:30003\"}]}).ok || rs.status().ok" | mongo --port 30001 --quiet) -eq 1
-  #      interval: 10s
-  #      start_period: 30s
 
   mongo2:
     image: mongo
