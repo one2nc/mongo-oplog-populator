@@ -54,7 +54,7 @@ func (csvw *CSVWriter) WriteData(personnelInfo generator.FakeData) {
 		}
 	}
 	writer.Flush()
-	log.Println("CSV file created successfully.")
+	log.Printf("CSV file %s created successfully.\n", csvw.FilePath)
 }
 
 func getCSVHeaders() []string {
