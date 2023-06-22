@@ -122,7 +122,7 @@ func calculateOperationSize(totalOperation int) generator.OperationSize {
 		Update: u,
 		Delete: d,
 	}
-	fmt.Printf("Out of total %d operations, %d: insert  %d:update %d:delete", totalOperation, i, u, d)
+	fmt.Printf("Out of total %d operations, %d: insert  %d:update %d:delete\n", totalOperation, i, u, d)
 
 	return opSize
 }
