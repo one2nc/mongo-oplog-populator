@@ -24,16 +24,18 @@
    
    `make build`
 
-2.  Run `./mongopop 10` for bulk operations  and 
+3. Create a `.env` file. You can refer [.env.example](.env.example) file
+
+4.  Run `./mongopop 10` for bulk operations  and 
         `./mongopop -s 10` for stream operations
      *  *./mongopop* is the binary file
      *  *-s* is the flag for stream operation
      *  *10* is the total number of operations to be performed in case of bulk insert and per second in case of stream insert
     
 
-3. To connect to mongo cluster `make connect`
+5. To connect to mongo cluster `make connect`
 
-4. To check oplogs in mongo execute the following commands:
+6. To check oplogs in mongo execute the following commands:
     - Change the database to local `use local` since all the oplogs are located in a file oplog.rs which is in local database
     - To see the oplogs generated:
       *  `db.oplog.rs.find({})` to see all oplogs
@@ -41,7 +43,7 @@
       *  `db.oplog.rs.find({op:"u"})` to see the updates
       *  `db.oplog.rs.find({op:"d"})` to see the deletions
 
-6. Tear down mongo
+7. Tear down mongo
     `make setup-down`
 
 
