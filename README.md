@@ -4,7 +4,7 @@ MongoDB oplog populator (alias `mongopop`) allows you to simulate traffic (inser
 This repo is a companion repo for https://github.com/one2nc/mongo-oplog-to-sql.
 If you want to test your `mongo-oplog-to-sql` binary on large data, you should use `mongopop`.
 
-### How it works?
+## How it works?
 
 When you run `mongopop`, it creates two collection - employees and students in MongoDB and populates some data in those tables.
 The employees collection is created in employee database while the students collection is created in student database.
@@ -26,7 +26,7 @@ The number of operations you specify via CLI are divided into insert, update and
 10 will be updates and 5 will be delete opertions. The operations are divided equally into the two collections - employees.employee and students.student.
 i.e. In case of `$ ./mongopop 100`, 50 operations will be done on employee collection and remaining 50 will be done on student collection.
 
-### Setup 
+## Setup 
 1. Setup mongo: Start a MongoDB replica server with 3 MongoDB instances (1 primary and 2 secondaries)
   
    `make setup`
@@ -59,3 +59,6 @@ i.e. In case of `$ ./mongopop 100`, 50 operations will be done on employee colle
     `make setup-down`
 
 NOTE: If you want to insert more records in mongo, run multiple instances of `mongopop`.
+
+## License
+This project is licensed under the [MIT License](./LICENSE)
