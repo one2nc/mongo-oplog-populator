@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"math/rand"
 	"sync"
+	"time"
 
+	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/generator"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,85 +19,136 @@ type Populator interface {
 }
 
 type populator struct {
-	OpSize         generator.OperationSize
-	NoOfOperations int
+	cfg config.Config
+
+	opSize         generator.OperationSize
+	noOfOperations int
 	ModeFlag       bool
 	Client         *mongo.Client
+
+	sharedIdx     int
+	updateIndices map[int]struct{}
+	deleteIndices map[int]struct{}
+	mu            sync.Mutex
 }
 
-func NewPopulator(client *mongo.Client, modeFlag bool, noOfOperations int) Populator {
+func NewPopulator(cfg config.Config, client *mongo.Client, modeFlag bool, noOfOperations int) Populator {
+	opSize := calculateOperationSize(noOfOperations)
+
+	// Seed the random number generator with the current time
+	rand.Seed(time.Now().UnixNano())
+
+	// Create a set to keep track of update indices
+	updateIndices := make(map[int]struct{})
+
+	// Generate a random number between 0 and totalNumbers (exclusive)
+	for len(updateIndices) < opSize.Update {
+		randomNumber := rand.Intn(noOfOperations)
+
+		// Add the random index to the updateIndices set
+		updateIndices[randomNumber] = struct{}{}
+	}
+
+	// Create a set to keep track of update indices
+	deleteIndices := make(map[int]struct{})
+
+	// Generate a random number between 0 and totalNumbers (exclusive)
+	for len(deleteIndices) < opSize.Delete {
+		randomNumber := rand.Intn(noOfOperations)
+
+		// Add the random index to the updateIndices set
+		deleteIndices[randomNumber] = struct{}{}
+	}
+
 	return &populator{
-		OpSize:         calculateOperationSize(noOfOperations),
+		cfg:            cfg,
+		opSize:         opSize,
+		updateIndices:  updateIndices,
+		deleteIndices:  deleteIndices,
 		Client:         client,
 		ModeFlag:       modeFlag,
-		NoOfOperations: noOfOperations,
+		noOfOperations: noOfOperations,
 	}
 }
 
-func (p populator) PopulateData(ctx context.Context, fakeData generator.FakeData) {
-	// Generate data
-	dataGenerator := createDataGenerator(p.NoOfOperations, p.ModeFlag)
-	dataChan := dataGenerator.Generate(ctx, fakeData)
+func (p *populator) PopulateData(ctx context.Context, fakeData generator.FakeData) {
+
+	dataGenerator := createDataGenerator(p.noOfOperations, p.ModeFlag)
+	dataChan := dataGenerator.GenerateDocument(ctx, fakeData)
 
 	var wg sync.WaitGroup
-
 	workerCnt := 25
-	for i := 0; i < workerCnt; i++ {
+	for idx := 0; idx < workerCnt; idx++ {
 		wg.Add(1)
-		go func(workerID int) {
-			defer wg.Done()
-			//fmt.Printf("workerID: %v\n", workerID)
-			p.worker(ctx, dataChan)
-		}(i)
+		go func() {
+			p.worker(ctx, dataChan, &wg)
+		}()
 	}
 
 	wg.Wait()
 }
 
-func (p populator) worker(ctx context.Context, dataChan <-chan generator.Data) {
-	updateCount := 0
-	deleteCount := 0
-	idx := 0
-	for data := range dataChan {
-		select {
-		case <-ctx.Done():
-			// The context is done, stop reading Oplogs
-			return
-		default:
-			// Context is still active, continue reading Oplogs
-		}
+func (p *populator) worker(ctx context.Context, dataChan <-chan generator.Document, wgOuter *sync.WaitGroup) {
+	defer wgOuter.Done()
 
-		_, err := p.insertData(ctx, data)
-		if err != nil {
-			fmt.Printf("Failed to insert data at index %d: %s\n", idx, err.Error())
-			return
-		}
+	var wg sync.WaitGroup
+	for doc := range dataChan {
 
-		//update
-		if isMultipleOfSevenEightOrEleven(idx) {
-			updateCount, err = p.updateData(ctx, data, updateCount)
-			if err != nil {
-				fmt.Printf("Failed to update data at index %d: %s\n", idx, err.Error())
-				return
+		p.mu.Lock()
+		idx := p.sharedIdx
+		p.sharedIdx++
+		p.mu.Unlock()
+
+		wg.Add(1)
+		go func(idx int, doc generator.Document) {
+			defer wg.Done()
+
+			for dbIdx := 1; dbIdx <= p.cfg.MaxDatabases; dbIdx++ {
+				wg.Add(1)
+				go func(idx, dbIdx int, doc generator.Document) {
+					defer wg.Done()
+
+					dbName := fmt.Sprintf("database%d", dbIdx)
+					db := p.Client.Database(dbName)
+
+					for collIdx := 1; collIdx <= p.cfg.MaxCollections; collIdx++ {
+						wg.Add(1)
+						go func(idx, collIdx int, db *mongo.Database) {
+							defer wg.Done()
+
+							collectionName := fmt.Sprintf("collection%d", collIdx)
+							collection := db.Collection(collectionName)
+
+							_, err := collection.InsertOne(context.Background(), doc)
+							if err != nil {
+								fmt.Printf("Failed to insert document: %v\n", err)
+							}
+
+							mapIdx := idx % p.noOfOperations
+							//update
+							if _, ok := p.updateIndices[mapIdx]; ok {
+								update := doc.GetUpdate()
+								_, err := collection.UpdateOne(ctx, doc, update)
+								if err != nil {
+									fmt.Printf("Failed to update document at index %d: %v\n", idx, err)
+								}
+							}
+
+							//delete
+							if _, ok := p.deleteIndices[mapIdx]; ok {
+								_, err := collection.DeleteOne(ctx, doc)
+								if err != nil {
+									fmt.Printf("Failed to delete document at index %d: %v\n", idx, err)
+								}
+							}
+
+						}(idx, collIdx, db)
+					}
+				}(idx, dbIdx, doc)
 			}
-		}
-
-		//delete
-		if isMultipleOfTwoNineortweleve(idx) {
-			deleteCount, err = p.deleteData(ctx, data, deleteCount)
-			if err != nil {
-				fmt.Printf("Failed to delete data at index %d: %s\n", idx, err.Error())
-				return
-			}
-		}
-
-		idx++
-
-		// reset update and delete count on each set of operations
-		if idx%p.NoOfOperations == 0 {
-			updateCount, deleteCount = 0, 0
-		}
+		}(idx, doc)
 	}
+	wg.Wait()
 }
 
 func createDataGenerator(noOfOperations int, modeFlag bool) generator.Generator {
@@ -125,77 +179,4 @@ func calculateOperationSize(totalOperation int) generator.OperationSize {
 	fmt.Printf("Out of total %d operations, %d: insert  %d:update %d:delete\n", totalOperation, i, u, d)
 
 	return opSize
-}
-
-func (p populator) insertData(ctx context.Context, data generator.Data) (*mongo.InsertOneResult, error) {
-	select {
-	case <-ctx.Done():
-		// The context is done, stop reading Oplogs
-		return nil, nil
-	default:
-	}
-
-	collection := data.GetCollection(p.Client)
-	InsertOneResult, err := collection.InsertOne(ctx, data)
-	if err != nil {
-		return nil, err
-	}
-	// fmt.Println("Inserted data")
-	return InsertOneResult, nil
-}
-
-func (p populator) updateData(ctx context.Context, data generator.Data, updateCount int) (int, error) {
-	select {
-	case <-ctx.Done():
-		// The context is done, stop reading Oplogs
-		return updateCount, nil
-	default:
-	}
-
-	if updateCount < p.OpSize.Update {
-		collection := data.GetCollection(p.Client)
-		update := data.GetUpdate()
-		_, err := collection.UpdateOne(ctx, data, update)
-		if err != nil {
-			return updateCount, err
-		}
-		updateCount++
-		// fmt.Println("Updated data")
-	}
-
-	return updateCount, nil
-}
-
-func (p populator) deleteData(ctx context.Context, data generator.Data, deleteCount int) (int, error) {
-	select {
-	case <-ctx.Done():
-		// The context is done, stop reading Oplogs
-		return deleteCount, nil
-	default:
-	}
-
-	if deleteCount < p.OpSize.Delete {
-		collection := data.GetCollection(p.Client)
-		_, err := collection.DeleteOne(ctx, data)
-		if err != nil {
-			return deleteCount, err
-		}
-		deleteCount++
-		// fmt.Println("Deleted data")
-	}
-	return deleteCount, nil
-}
-
-func isMultipleOfSevenEightOrEleven(n int) bool {
-	if n == 0 {
-		return false
-	}
-	return n%7 == 0 || n%8 == 0 || n%11 == 0 || n == 10
-}
-
-func isMultipleOfTwoNineortweleve(n int) bool {
-	if n == 0 {
-		return false
-	}
-	return n%2 == 0 || n%9 == 0 || n%12 == 0 || n == 10
 }

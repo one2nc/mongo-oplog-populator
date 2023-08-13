@@ -74,7 +74,7 @@ var rootCmd = &cobra.Command{
 		//Disconnect Client (pass ctx later for disconnecting mongo client)
 		defer writer.DisconnectMongoClient(ctx, client)
 
-		populatorService := service.NewPopulator(client, modeFlag, noOfOperations)
+		populatorService := service.NewPopulator(cfg, client, modeFlag, noOfOperations)
 		populatorService.PopulateData(ctx, fakeData)
 	},
 }

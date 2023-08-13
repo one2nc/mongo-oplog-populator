@@ -6,8 +6,7 @@ If you want to test your `mongo-oplog-to-sql` binary on large data, you should u
 
 ## How it works?
 
-When you run `mongopop`, it creates two collection - employees and students in MongoDB and populates some data in those tables.
-The employees collection is created in employee database while the students collection is created in student database.
+When you execute the `mongopop` command, the process dynamically generates databases and collections based on the configurations specified in the `.env` file. This dynamic creation of databases and collections is controlled by the values of `MAX_DB` and `MAX_COLLECTION` in the `.env` file.
 
 ![mongo-oplog-flow](assets/MongoDb-oplog-populator.png)
 
@@ -22,9 +21,8 @@ The number of operations you specify via CLI are divided into insert, update and
 - 10% updates
 - 5% deletes
 
-`mongopop` performs insert, update and delete operations randomly. If you were to specify 100 operations, 85 of them will be inserts,
-10 will be updates and 5 will be delete opertions. The operations are divided equally into the two collections - employees.employee and students.student.
-i.e. In case of `$ ./mongopop 100`, 50 operations will be done on employee collection and remaining 50 will be done on student collection.
+The `mongopop` utility carries out insert, update, and delete operations in a randomized manner. For instance, if you designate 100 operations, the distribution will be as follows: 85 of them will be inserts, 10 will be updates, and 5 will be delete operations. It's important to note that these operations are performed individually for each database collection.
+To illustrate, consider the scenario where you execute `$ ./mongopop 100` with `MAX_DB=2` and `MAX_COLLECTION=2`. In this case, all 100 operations will be distributed across `database1.collection1`, `database1.collection2`, `database2.collection1`, and `database2.collection2`.
 
 ## Setup 
 1. Setup mongo: Start a MongoDB replica server with 3 MongoDB instances (1 primary and 2 secondaries)

@@ -21,55 +21,57 @@ type DataGenerator interface {
 }
 
 type Generator interface {
-	Generate(ctx context.Context, fakeData FakeData) <-chan Data
+	GenerateDocument(ctx context.Context, fakeData FakeData) <-chan Document
 }
 
-func generateData(noOfOperations int, attributes FakeData) []Data {
+func generateDocument(noOfOperations int, attributes FakeData) []Document {
 	tempAlterOpsCnt := float64(noOfOperations) * 0.1
 	alterOpsCnt := int(math.Round(tempAlterOpsCnt))
 
-	x := (noOfOperations - alterOpsCnt*2) / 2
-	var data []Data
-	index := 0
-	for i := 0; i < x; i++ {
-		emp := &Employee{}
-		empData := emp.GetData(attributes, index)
-		data = append(data, empData)
-		student := &Student{}
-		studentData := student.GetData(attributes, index)
-		data = append(data, studentData)
-		index++
-		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
-		if index > len(attributes.FirstNames)-2 {
-			index = 0
+	insertOpCnt := noOfOperations - alterOpsCnt
+	var docs []Document
+	for index := 0; index < insertOpCnt; index++ {
+		doc := Document{
+			Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
+			Age:    attributes.Ages[index],
+			Salary: attributes.Salaries[index],
+			Phone:  Phone{attributes.PhoneNumbers[index], attributes.PhoneNumbers[index+1]},
+			Address: []Address{
+				{attributes.Zips[index], attributes.StreetAddresses[index]},
+				{attributes.Zips[index+1], attributes.StreetAddresses[index+1]},
+			},
+			Position: attributes.Positions[index%len(attributes.Positions)],
 		}
+		docs = append(docs, doc)
 	}
-	dataAlterTable := generateDataAlterTable(alterOpsCnt, attributes)
-	data = append(data, dataAlterTable...)
-	shuffle(data)
-	return data
+
+	docsAlterTable := generateDocsAlterTable(alterOpsCnt, attributes)
+	docs = append(docs, docsAlterTable...)
+	shuffleDocs(docs)
+	return docs
 }
 
-func generateDataAlterTable(operations int, attributes FakeData) []Data {
-	var data []Data
-	index := 0
-	for i := 0; i < operations; i++ {
-		emp := &EmployeeA{}
-		empData := emp.GetData(attributes, index)
-		data = append(data, empData)
-		student := &StudentA{}
-		studentData := student.GetData(attributes, index)
-		data = append(data, studentData)
-		index++
-		//to reset if attributes size < input number of operations size. Will continue to read data in a cycle
-		if index > len(attributes.FirstNames)-2 {
-			index = 0
+func generateDocsAlterTable(operations int, attributes FakeData) []Document {
+	var docs []Document
+	for index := 0; index < operations; index++ {
+		doc := Document{
+			Name:   attributes.FirstNames[index] + " " + attributes.LastNames[index],
+			Age:    attributes.Ages[index],
+			Salary: attributes.Salaries[index],
+			Phone:  Phone{attributes.PhoneNumbers[index], attributes.PhoneNumbers[index+1]},
+			Address: []Address{
+				{attributes.Zips[index], attributes.StreetAddresses[index]},
+				{attributes.Zips[index+1], attributes.StreetAddresses[index+1]},
+			},
+			Position:  attributes.Positions[index%len(attributes.Positions)],
+			WorkHours: attributes.Workhours[index],
 		}
+		docs = append(docs, doc)
 	}
-	return data
+	return docs
 }
 
-func shuffle(slice []Data) {
+func shuffleDocs(slice []Document) {
 	for i := range slice {
 		j := rand.Intn(i + 1)
 		slice[i], slice[j] = slice[j], slice[i]

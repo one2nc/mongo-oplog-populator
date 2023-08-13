@@ -5,19 +5,19 @@ import (
 )
 
 type BulkInsert struct {
-	NoOfOperations int
+	noOfOperations int
 }
 
 func NewBulkDataGenerator(noOfOperations int) Generator {
 	return &BulkInsert{
-		NoOfOperations: noOfOperations,
+		noOfOperations: noOfOperations,
 	}
 }
 
-func (bi BulkInsert) Generate(ctx context.Context, fakeData FakeData) <-chan Data {
-	data := make(chan Data)
+func (bi BulkInsert) GenerateDocument(ctx context.Context, fakeData FakeData) <-chan Document {
+	data := make(chan Document)
 	go func() {
-		tempData := generateData(bi.NoOfOperations, fakeData)
+		tempData := generateDocument(bi.noOfOperations, fakeData)
 		for _, td := range tempData {
 			data <- td
 		}
