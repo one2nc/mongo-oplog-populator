@@ -86,6 +86,13 @@ func (p *populator) PopulateData(ctx context.Context, fakeData generator.FakeDat
 	}
 
 	wg.Wait()
+
+	fmt.Println(fmt.Sprintf(`Operations Summary:
+  - %d: insert(s)
+  - %d: update(s)
+  - %d: delete(s)
+  All operations completed successfully.`, p.opSize.Insert, p.opSize.Update, p.opSize.Delete))
+
 }
 
 func (p *populator) worker(ctx context.Context, dataChan <-chan generator.Document, wgOuter *sync.WaitGroup) {
@@ -176,7 +183,6 @@ func calculateOperationSize(totalOperation int) generator.OperationSize {
 		Update: u,
 		Delete: d,
 	}
-	fmt.Printf("Out of total %d operations, %d: insert  %d:update %d:delete\n", totalOperation, i, u, d)
 
 	return opSize
 }
