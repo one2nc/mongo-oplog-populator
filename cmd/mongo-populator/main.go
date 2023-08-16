@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"mongo-oplog-populator/config"
 	"mongo-oplog-populator/internal/app/populator/generator"
 	"mongo-oplog-populator/internal/app/populator/reader"
@@ -21,14 +20,19 @@ var (
 )
 
 func init() {
-	rootCmd.Flags().BoolVarP(&modeFlag, "stream", "s", false, "Stream Mode")
+	rootCmd.Flags().BoolVarP(&modeFlag, "stream", "s", false, "enable stream operations")
 
+	// Specify to expect 1 argument
+	rootCmd.Args = cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs)
+
+	rootCmd.Example = `  ./mongopop 10 		# Execute bulk operations with a total of 10 operations
+  ./mongopop -s 10  		# Enable stream operations with 10 operations per second`
 }
 
 var rootCmd = &cobra.Command{
 	Use:   "mongopop",
 	Short: "Data Populator in MongoDB",
-	Long:  "mongopop adds dummy data in MongoDB collections. It generates about 85% inserts, 10% updates and 5% deletes in employees and students collections.",
+	Long:  "MongoDB oplog populator (alias `mongopop`) allows you to simulate traffic (85% inserts, 10% updates, and 5% deletes) in MongoDB.",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if !cmd.Flags().HasFlags() {
@@ -37,13 +41,13 @@ var rootCmd = &cobra.Command{
 		}
 
 		if len(os.Args) == 1 {
-			fmt.Println("Enter some value for number of operations e.g. ./mongopop 10")
+			cmd.Usage()
 			return
 
 		}
 		noOfOperations, err := strconv.Atoi(args[0])
 		if err != nil {
-			fmt.Println("Invalid argument. Please provide a valid integer.")
+			cmd.Usage()
 			os.Exit(1)
 		}
 
